@@ -81,7 +81,9 @@ code{font-family:var(--mono)}
 .step-meta #stepTag{color:var(--muted);letter-spacing:.08em}
 .narrator h1{margin:7px 0 4px;font-size:clamp(21px,2.05vw,30px);font-weight:650;letter-spacing:-.015em}
 .narrator p{margin:0;max-width:1180px;color:#a8b7c9;font-size:clamp(13px,1.1vw,15.5px);line-height:1.5}
-.narrator.swap .step-meta,.narrator.swap h1,.narrator.swap p{animation:rise .32s ease-out}
+.narrator .cue{margin:4px 0 0;max-width:1180px;color:#7fe2bd;font:600 clamp(10.5px,.95vw,12.5px)/1.4 var(--mono);letter-spacing:.01em;min-height:1.2em}
+.narrator .cue::before{content:"▸ ";color:#48d6a2}
+.narrator.swap .step-meta,.narrator.swap h1,.narrator.swap p,.narrator.swap .cue{animation:rise .32s ease-out}
 @keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
 /* server config controls */
@@ -323,6 +325,11 @@ code{font-family:var(--mono)}
 .pkt-tag.bad{background:rgba(255,107,107,.2);color:#ffd6d6}
 .packet .lock{color:#c9b6ff}
 .packet .cipher{color:#a99ad0}
+.pkt-tag.ok{background:rgba(55,211,153,.22);color:#c9ffe9}
+.packet.resp{color:#c9ffe9;background:rgba(10,30,23,.97);border:1px solid rgba(55,211,153,.55);box-shadow:0 0 26px -8px rgba(55,211,153,.5),0 14px 34px -12px #000}
+.packet.resp.bad{color:#ffd6d6;background:rgba(38,15,17,.97);border-color:rgba(255,107,107,.6);box-shadow:0 0 26px -8px rgba(255,107,107,.5),0 14px 34px -12px #000}
+.packet.steal{color:#ffd6d6;background:rgba(38,15,17,.97);border:1px solid rgba(255,107,107,.62);box-shadow:0 0 26px -8px rgba(255,107,107,.55),0 14px 34px -12px #000}
+.packet.resp .lock,.packet.steal .lock{color:#ffb4b4}
 
 .footer{flex:none;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 14px;padding:0 2px;font:10px var(--mono);color:#42536a}
 .footer .r{color:#4c6079}
@@ -412,6 +419,9 @@ body.expanding .wires,body.expanding .packet{opacity:0}
 
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.001s !important;transition-duration:.001s !important}
+  /* continuous animations stop outright (a .001 s infinite loop would restart 1000 times a second);
+     the spinner keeps its darker quarter so it still reads as "working" */
+  .wire-flow,.spinner{animation:none !important}
 }
 @media (max-width:1260px){
   body{overflow:auto}
@@ -459,6 +469,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     <div class="step-meta"><span id="stepCount">Step 1 of 7</span><span class="sep">·</span><span id="stepTag">register</span></div>
     <h1 id="stepTitle">A password arrives</h1>
     <p id="stepText"></p>
+    <p class="cue" id="stepCue"></p>
   </section>
 
   <main class="stage" id="stage" aria-label="Password hashing stage">
@@ -524,7 +535,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
             <div class="scale-row"><span>1 million guesses</span><b id="rig1m">16m 40s</b></div>
             <div class="scale-row"><span>1 billion guesses</span><b id="rig1b">11.6 days</b></div>
             <div class="scale-row"><span>1 trillion guesses</span><b id="rig1t">31.7 years</b></div>
-            <div class="scale-row strong"><span>5-word passphrase</span><b id="rigPass">~450 million years</b></div>
+            <div class="scale-row strong"><span>5-word passphrase (average)</span><b id="rigPass">~450 million years</b></div>
             <div class="scale-note" id="rigNote">The GPU is always trying. A million guesses is minutes; a strong passphrase is far beyond reach.</div>
           </div>
                   <div class="cracker" id="crackerStrip">
@@ -533,7 +544,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
             <div class="crack-line" id="crackLine">64 MiB per guess · a 24 GiB GPU fits ≈ 384 guesses</div>
             <div class="crack-bars">
               <div class="cbar argon"><span>Argon2id</span><span class="track"><span class="fill" id="crackArgonFill"></span></span><em id="crackArgonRate">~10³/s</em></div>
-              <div class="cbar sha"><span>SHA-256</span><span class="track"><span class="fill"></span></span><em>~10⁹/s</em></div>
+              <div class="cbar sha"><span>SHA-256</span><span class="track"><span class="fill"></span></span><em>~10¹⁰/s</em></div>
             </div>
           </div>
         </div>
@@ -562,7 +573,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
           <div class="io-grid">
             <div class="io">
               <div class="io-k">PASSWORD<span class="io-tag">in memory</span></div>
-              <code class="io-v" id="enginePassword">correct horse battery staple</code>
+              <code class="io-v muted" id="enginePassword">—</code>
               <div class="io-n">never written to disk</div>
             </div>
             <div class="io">
@@ -684,7 +695,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     {
       tag: 'register',
       title: 'A password arrives',
-      text: 'Alice creates an account. Her password crosses the wire once, over TLS, and lives briefly in server memory. The browser sends only the password — the salt and Argon2id parameters are chosen by the server. The server now has to store a verifier, without storing the password itself.'
+      text: 'Alice creates an account. Her password crosses the wire once, over TLS, and lives briefly in server memory. The browser sends only the password — it has no say in the salt or the Argon2id parameters, which the server chooses. The server now has to store a verifier, without storing the password itself.'
     },
     {
       tag: 'salt',
@@ -714,7 +725,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     {
       tag: 'why',
       title: 'Why Argon2id',
-      text: 'The attacker rig is offline with the stolen verifier, trying guesses at this profile’s rate. Each guess costs {mem}. A million guesses is minutes; a billion is days; a trillion is years. A strong 5-word passphrase is far beyond that. Salt, rate limiting, and entropy still matter — but a stolen verifier is expensive to attack.'
+      text: 'The attacker rig is offline with the stolen verifier, trying guesses at this profile’s rate. Each guess costs {mem}. A million guesses takes {t1m}; a billion {t1b}; a trillion {t1t}. A strong 5-word passphrase is far beyond that. Salt, rate limiting, and entropy still matter — but a stolen verifier is expensive to attack.'
     }
   ];
 
@@ -748,7 +759,10 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   const playIco = $('playIco');
   const btnFull = $('btnFull');
 
-  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Both queries are read live, so a motion-setting or window change mid-lesson is honoured at the next step.
+  const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const stackedQuery = window.matchMedia('(max-width: 1260px)'); // the same breakpoint as the CSS
+  const reducedMotion = () => motionQuery.matches;
   const lockIcon = (s = 11) => `<svg viewBox="0 0 16 16" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.2" y="7" width="9.6" height="6.3" rx="1.6"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>`;
   const checkIcon = `<svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 8 14.5 16 5.5"/></svg>`;
   const crossIcon = `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l10 10M15 5 5 15"/></svg>`;
@@ -764,6 +778,8 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     rigAttempts: 0,
     rigTicks: 0,
     gen: 0,
+    stepStart: 0,   // performance.now() when the current step was entered (auto-play reading time)
+    animEnd: 0,     // when its animation finished (or stepStart if it had none)
     vis: { salt: false, tag: false, stored: false, verified: false, failed: false, compared: false }
   };
   const P = () => PROFILES[state.profile];
@@ -773,9 +789,19 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   let activeTimers = new Set();
   let playTimer = null;
 
-  const animationsEnabled = () => window.innerWidth > 1260;
-  const dur = (ms) => REDUCED ? 1 : ms;
-  const sleep = (ms) => new Promise((r) => setTimeout(r, dur(ms)));
+  // No wire animation in the stacked layout, and none while the tab is hidden: a hidden tab does not tick
+  // Web Animations, so a step that waited on one would sit on its spinner until the tab came back.
+  const animationsEnabled = () => !stackedQuery.matches && !document.hidden;
+  const dur = (ms) => reducedMotion() ? 1 : ms;
+  // A tracked timer: cancelAnims() clears it, so a cancelled step can never wake up later.
+  const sleep = (ms) => new Promise((r) => later(r, dur(ms)));
+  // Like sleep, but the duration is NOT collapsed under reduced motion: used for the move() fallback
+  // and the packet crossings, which must stay briefly visible even when reduced motion is on.
+  const rawSleep = (ms) => new Promise((r) => later(r, ms));
+  // A packet crossing: ~1.2–1.8 s normally, short but still visible under reduced motion.
+  const PKT_MS = 1500;
+  const STEAL_MS = 1600;
+  const pdur = (ms) => reducedMotion() ? 320 : ms;
 
   function later(fn, ms) {
     const id = setTimeout(() => { activeTimers.delete(id); fn(); }, ms);
@@ -799,14 +825,24 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     el.classList.add('flash');
   }
 
+  // One flag per thing the viewer can SEE on the server/attacker side. targetVis() is the finished
+  // picture of a step; during an animated step the step's own script turns these on in order, each only
+  // after the packet that causes it has arrived. The fallback paths (hidden tab, watchdog, stacked
+  // deep-link) set the whole finished set at once, so nothing can be left half-revealed.
   function targetVis(step) {
     return {
-      salt: step >= 1,
-      tag: step >= 2,
-      stored: step >= 3,
-      verified: step === 4,
-      failed: step === 5,
-      compared: step === 4 || step === 5
+      reg: step >= 1,       // POST /register has arrived at the server (request-log line)
+      pwIn: true,           // the password in the CURRENT request has arrived (cleared while a login packet is still travelling)
+      salt: step >= 1,      // the server has drawn the salt (salt line + salt value)
+      tag: step >= 2,       // Argon2id has produced the 32-byte tag (memory fill + derive line + tag)
+      stored: step >= 3,    // the verifier is written to the users table
+      created: step >= 3,   // 201 Created has travelled back to the browser
+      verified: step === 4, // the good-password compare has finished
+      failed: step === 5,   // the wrong-password compare has finished
+      compared: step === 4 || step === 5,
+      delivered: step === 4 || step === 5, // the response (200/401) has reached the browser
+      policy: step >= 6,    // the rate-limit policy line
+      stolen: step >= 6     // the attacker rig has received the stolen verifier
     };
   }
 
@@ -857,28 +893,52 @@ body.expanding .wires,body.expanding .packet{opacity:0}
         <p class="auth-tiny">Demo password · sent over TLS · never stored</p>
       </div>`;
     } else if (s === 1) {
-      inner = statusCard(
-        `<div class="spinner"></div>`,
-        'Preparing your account…',
-        'Generating 16 random bytes of salt. The salt is stored with the verifier, not kept secret.',
-        `<button class="auth-btn ghost" data-goto="2">Continue →</button>`
-      );
+      // The wheel turns only while the request is in flight; once the server has drawn the salt it
+      // becomes a tick, so the page never shows a spinner that nothing will ever stop.
+      inner = state.vis.salt
+        ? statusCard(
+            `<div class="auth-icon ok">${checkIcon}</div>`,
+            'Salt generated',
+            'The server drew 16 random bytes of salt. The salt is stored with the verifier, not kept secret.',
+            `<button class="auth-btn ghost" data-goto="2">Continue →</button>`
+          )
+        : statusCard(
+            `<div class="spinner"></div>`,
+            'Preparing your account…',
+            'Your details are on their way to the server over TLS. It will draw 16 random bytes of salt.',
+            `<button class="auth-btn ghost" data-goto="2">Continue →</button>`
+          );
     } else if (s === 2) {
-      inner = statusCard(
-        `<div class="spinner"></div>`,
-        'Hashing with Argon2id…',
-        `${p.memLabel} of memory · ${passes} · ${lanes}. This is intentionally slow.`,
-        `<button class="auth-btn ghost" data-goto="3">Store verifier →</button>`
-      );
+      inner = state.vis.tag
+        ? statusCard(
+            `<div class="auth-icon ok">${checkIcon}</div>`,
+            'Verifier derived',
+            `${p.memLabel} of memory · ${passes} · ${lanes}. The 32-byte tag is ready to be stored.`,
+            `<button class="auth-btn ghost" data-goto="3">Store verifier →</button>`
+          )
+        : statusCard(
+            `<div class="spinner"></div>`,
+            'Hashing with Argon2id…',
+            `${p.memLabel} of memory · ${passes} · ${lanes}. This is intentionally slow.`,
+            `<button class="auth-btn ghost" data-goto="3">Store verifier →</button>`
+          );
     } else if (s === 3) {
-      inner = statusCard(
-        `<div class="auth-icon ok">${checkIcon}</div>`,
-        'Account created',
-        'The server stored a salted Argon2id verifier. Your password was discarded.',
-        `<button class="auth-btn" data-goto="4">Sign in →</button>`
-      );
+      // The tick waits for the server's 201 to arrive, so the result never precedes its response.
+      inner = state.vis.created
+        ? statusCard(
+            `<div class="auth-icon ok">${checkIcon}</div>`,
+            'Account created',
+            'The server stored a salted Argon2id verifier and replied 201 Created. Your password was discarded.',
+            `<button class="auth-btn" data-goto="4">Sign in →</button>`
+          )
+        : statusCard(
+            `<div class="spinner"></div>`,
+            'Creating your account…',
+            'The verifier is being written to the database. Waiting for the server to confirm.',
+            ''
+          );
     } else if (s === 4) {
-      inner = state.vis.compared
+      inner = state.vis.delivered
         ? statusCard(
             `<div class="auth-icon ok">${checkIcon}</div>`,
             'Welcome back, Alice',
@@ -892,7 +952,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
             ''
           );
     } else if (s === 5) {
-      inner = state.vis.compared
+      inner = state.vis.delivered
         ? statusCard(
             `<div class="auth-icon bad">${crossIcon}</div>`,
             'Incorrect password',
@@ -931,28 +991,33 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   }
 
   function renderServer() {
+    // Every line is gated on a vis flag, so a log line can appear only once its cause (an arrived
+    // packet, or work the server has finished) has happened — never at the instant the step loads.
     const s = state.step;
+    const v = state.vis;
     let h = '';
-    if (s < 1) {
+    if (!v.reg) {
       h = `<div class="srv-empty">waiting for credentials…</div>`;
     } else {
       h += logEntry('register', '12:04:01', 'POST', '/register', '200', 'email=alice@example.test · password received over TLS', 'post');
-      h += logEntry('salt', '12:04:01', 'CSPRNG', '16 bytes', '', `salt = ${SALT_HEX}`, 'crypto');
-      if (s >= 2) {
+      if (v.salt) h += logEntry('salt', '12:04:01', 'CSPRNG', '16 bytes', '', `salt = ${SALT_HEX}`, 'crypto');
+      if (v.tag) {
         const p = P();
         h += logEntry('derive', '12:04:02', 'ARGON2ID', `m=${p.m},t=${p.t},p=${p.p}`, '',
           `${p.memLabel} · ${p.t} passes · ${p.p} lane${p.p === 1 ? '' : 's'} · ~${p.time} ms`, 'crypto');
       }
-      if (s >= 3) {
+      if (v.stored) {
         h += logEntry('insert', '12:04:02', 'SQL', 'INSERT users', '201', 'verifier stored · plaintext discarded', 'set');
       }
-      if (s >= 4 && (s > 4 || state.vis.compared)) {
+      // the good login happened at step 4 and stays in the log on later steps; it shows at step 4 only
+      // once the compare has finished (constant-time compare OK), i.e. after the request arrived.
+      if ((s > 4) || (s === 4 && v.compared && v.verified)) {
         h += logEntry('login', '12:04:03', 'POST', '/login', '200', 'constant-time compare OK · session issued', 'post');
       }
-      if (s >= 5 && (s > 5 || state.vis.compared)) {
+      if ((s > 5) || (s === 5 && v.compared && v.failed)) {
         h += logEntry('fail', '12:04:04', 'POST', '/login', '401', 'compare failed · no session · rate-limit 5/min', 'post');
       }
-      if (s >= 6) {
+      if (v.policy) {
         h += logEntry('policy', '12:04:04', 'POLICY', 'rate limit', '', '5 attempts / minute · params current · rehash on upgrade', 'crypto');
       }
     }
@@ -961,7 +1026,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   }
 
   function renderDB() {
-    if (state.step < 3) {
+    if (!state.vis.stored) {
       dbRows.innerHTML = `<div class="db-empty">No verifier stored.</div>`;
       return;
     }
@@ -1088,10 +1153,13 @@ body.expanding .wires,body.expanding .packet{opacity:0}
 
   function renderEngine() {
     const p = P();
-    enginePassword.textContent = state.step === 5 ? WRONG : PASSWORD;
-    enginePassword.classList.toggle('bad', state.step === 5);
-    engineSalt.textContent = state.step >= 1 ? SALT_HEX : '—';
-    engineSalt.classList.toggle('muted', state.step < 1);
+    // The engine holds a password only once a request carrying it has ARRIVED: never before its packet.
+    const pwHeld = !!(state.vis.reg && state.vis.pwIn);
+    enginePassword.textContent = pwHeld ? (state.step === 5 ? WRONG : PASSWORD) : '—';
+    enginePassword.classList.toggle('bad', pwHeld && state.step === 5);
+    enginePassword.classList.toggle('muted', !pwHeld);
+    engineSalt.textContent = state.vis.salt ? SALT_HEX : '—';
+    engineSalt.classList.toggle('muted', !state.vis.salt);
 
     $('chipM').textContent = `m = ${p.memLabel}`;
     $('chipT').textContent = `t = ${p.t}`;
@@ -1125,14 +1193,14 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   function setFormula(mode, info = {}) {
     const f = $('memFormula');
     if (mode === 'idle') {
-      f.innerHTML = `<span>B[lane][j] = <b>G</b>( B[lane][j−1], B[lane][<span class="r">ref</span>] )</span><span class="ph">every block needs an earlier block → memory-hard</span>`;
+      f.innerHTML = `<span>B[lane][j] = <b>G</b>( B[lane][j−1], B[l′][<span class="r">ref</span>] )</span><span class="ph">every block mixes in an earlier block, from its own or another lane → memory-hard</span>`;
     } else if (mode === 'fill') {
       const { col, ref, indep, pass } = info;
       if (pass === 1 && col < 2) {
-        f.innerHTML = `<span>B[L0][<b>${col}</b>] = <b>H′</b>( H0 ‖ ${col} ‖ lane )</span><span class="ph">seed blocks · H0 = H(password, salt, m, t, p)</span>`;
+        f.innerHTML = `<span>B[lane][<b>${col}</b>] = <b>H′</b>( H0 ‖ ${col} ‖ lane )</span><span class="ph">seed blocks · H0 = H(password, salt, m, t, p)</span>`;
         return;
       }
-      f.innerHTML = `<span>B[L0][<b>${col}</b>] = <b>G</b>( B[L0][${col - 1}], B[L0][<span class="r">${ref}</span>] )</span><span class="ph">pass ${pass} · ref ${indep ? 'from a PRNG · data-independent' : 'from the previous block · data-dependent'}</span>`;
+      f.innerHTML = `<span>B[lane][<b>${col}</b>] = <b>G</b>( B[lane][${col - 1}], B[l′][<span class="r">${ref}</span>] )</span><span class="ph">pass ${pass} · ref ${indep ? 'chosen by a PRNG · data-independent' : 'chosen from the previous block’s contents · data-dependent'}</span>`;
     } else if (mode === 'verify') {
       f.innerHTML = `<span>same salt · same m, t, p · same <b>G</b> chain</span><span class="ph">recomputing the tag from the entered password</span>`;
     } else {
@@ -1143,7 +1211,11 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   function updateProfileButtons() {
     const seg = $('profileSeg');
     if (!seg) return;
-    seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.profile === state.profile));
+    seg.querySelectorAll('button').forEach((b) => {
+      const on = b.dataset.profile === state.profile;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
   }
 
   function renderAll() {
@@ -1199,7 +1271,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     $('rig1t').textContent = fmtDuration(1e12 / p.rateNum);
     $('rigPass').textContent = fmtDuration(1.42e19 / p.rateNum);
     if (!state.rigRunning && state.rigAttempts === 0) {
-      $('rigNote').textContent = `A million guesses is ${fmtDuration(1e6 / p.rateNum)}. A 5-word passphrase (~2.8×10¹⁹) is ${fmtDuration(1.42e19 / p.rateNum)}.`;
+      $('rigNote').textContent = `A million guesses is ${fmtDuration(1e6 / p.rateNum)}. A 5-word Diceware passphrase (7776⁵ ≈ 2.8×10¹⁹, half of them on average) is ${fmtDuration(1.42e19 / p.rateNum)}.`;
     }
   }
 
@@ -1249,15 +1321,30 @@ body.expanding .wires,body.expanding .packet{opacity:0}
         state.rigRunning = false;
         $('rigRun').textContent = 'Run again ▸';
         gpuSlots.forEach((s) => s.classList.remove('hot'));
-        $('rigNote').textContent = `1,000,000 guesses = ${fmtDuration(1e6 / p.rateNum)} of GPU time. A 5-word passphrase = ${fmtDuration(1.42e19 / p.rateNum)}.`;
+        $('rigNote').textContent = `1,000,000 guesses = ${fmtDuration(1e6 / p.rateNum)} of GPU time. A 5-word passphrase (half of 7776⁵ on average) = ${fmtDuration(1.42e19 / p.rateNum)}.`;
       }
     }, 100);
   }
 
   function fillProfileText(text) {
     const p = P();
-    return text.replaceAll('{mem}', p.memLabel).replaceAll('{t}', String(p.t)).replaceAll('{p}', String(p.p));
+    return text.replaceAll('{mem}', p.memLabel).replaceAll('{t}', String(p.t)).replaceAll('{p}', String(p.p))
+      .replaceAll('{t1m}', fmtDuration(1e6 / p.rateNum)).replaceAll('{t1b}', fmtDuration(1e9 / p.rateNum))
+      .replaceAll('{t1t}', fmtDuration(1e12 / p.rateNum));
   }
+
+  // A one-line caption under the step text that names the sequence the viewer is watching. The scripts
+  // overwrite it live as the packet crosses and the server reacts.
+  const CUES = [
+    'Alice fills in the form. Nothing has been sent yet — Next sends it across the wire over TLS.',
+    'The form crosses the wire; on arrival the server logs the request and draws a random salt.',
+    'No new message here — this is work the server does on the password and salt it already received.',
+    'The server writes the verifier to the users table, then replies 201 Created to the browser.',
+    'The browser sends the password again; the server recomputes, compares, and replies 200 OK.',
+    'A wrong password crosses the wire; the compare fails and the server replies 401.',
+    'The stolen users row travels from the database to the attacker rig, which then guesses offline.'
+  ];
+  function setCue(text) { const c = $('stepCue'); if (c) c.textContent = text; }
 
   function updateNarrator() {
     const s = STEPS[state.step];
@@ -1265,6 +1352,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     $('stepTag').textContent = s.tag;
     $('stepTitle').textContent = s.title;
     $('stepText').textContent = fillProfileText(s.text);
+    setCue(fillProfileText(CUES[state.step] || ''));
     narrator.classList.remove('swap');
     void narrator.offsetWidth;
     narrator.classList.add('swap');
@@ -1274,6 +1362,8 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     [...dots.children].forEach((b, i) => {
       b.classList.toggle('on', i === state.step);
       b.classList.toggle('past', i < state.step);
+      if (i === state.step) b.setAttribute('aria-current', 'step');
+      else b.removeAttribute('aria-current');
     });
   }
 
@@ -1321,52 +1411,104 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   }
 
   // ---------- packets ----------
-  function makePacket(html) {
+  function makePacket(html, cls) {
     const el = document.createElement('div');
-    el.className = 'packet tls';
+    el.className = 'packet ' + (cls || 'tls');
     el.innerHTML = html;
     stage.appendChild(el);
     return el;
   }
 
-  function pktPos(anchor, el) {
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const y = geo.y - h / 2;
-    if (anchor === 'browser') return { x: geo.B - 18, y };
-    return { x: geo.S - w + 18, y };
-  }
-
   function move(el, from, to, ms) {
     el.style.transform = `translate(${from.x}px,${from.y}px)`;
+    if (typeof el.animate !== 'function') {
+      // No Web Animations API (old browsers): a CSS transition, timed by the clock.
+      el.style.transition = `transform ${ms}ms cubic-bezier(.45,0,.25,1)`;
+      void el.offsetWidth;
+      el.style.transform = `translate(${to.x}px,${to.y}px)`;
+      return rawSleep(ms + 60);
+    }
     const a = el.animate(
       [
         { transform: `translate(${from.x}px,${from.y}px)` },
         { transform: `translate(${to.x}px,${to.y}px)` }
       ],
-      { duration: dur(ms), easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }
+      { duration: ms, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }
     );
     activeAnims.add(a);
-    return a.finished.catch(() => {}).then(() => { activeAnims.delete(a); });
+    const finished = a.finished.catch(() => {}).then(() => { activeAnims.delete(a); });
+    // Never wait on the animation alone: its `finished` promise only settles when the browser is
+    // painting (not in a hidden tab, not on a throttled page). The clock is the fallback.
+    return Promise.race([finished, rawSleep(ms + 300)]);
   }
 
   function packetHTML(kind) {
-    if (kind === 'register') {
-      return `<div class="pkt-row"><span class="pkt-tag">POST</span> /register</div>
-        <div class="pkt-row sub"><span class="lock">${lockIcon(11)}</span> TLS 1.3 · password</div>`;
+    switch (kind) {
+      case 'register':
+        return `<div class="pkt-row"><span class="pkt-tag">POST</span> /signup</div>
+          <div class="pkt-row sub"><span class="lock">${lockIcon(11)}</span> TLS · email + password</div>`;
+      case 'created':
+        return `<div class="pkt-row"><span class="pkt-tag ok">201</span> Created</div>
+          <div class="pkt-row sub">account stored · no password returned</div>`;
+      case 'login':
+        return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
+          <div class="pkt-row sub"><span class="lock">${lockIcon(11)}</span> TLS · email + password</div>`;
+      case 'ok200':
+        return `<div class="pkt-row"><span class="pkt-tag ok">200</span> OK</div>
+          <div class="pkt-row sub">session issued</div>`;
+      case 'wrong':
+        return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
+          <div class="pkt-row sub"><span class="pkt-tag bad">WRONG</span> <span class="lock">${lockIcon(11)}</span> TLS · one char off</div>`;
+      case 'deny401':
+        return `<div class="pkt-row"><span class="pkt-tag bad">401</span> Unauthorized</div>
+          <div class="pkt-row sub">no session issued</div>`;
+      case 'steal':
+        return `<div class="pkt-row"><span class="pkt-tag bad">LEAK</span> stolen users row</div>
+          <div class="pkt-row sub">$argon2id$… verifier · no password</div>`;
     }
-    if (kind === 'wrong') {
-      return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
-        <div class="pkt-row sub"><span class="pkt-tag bad">WRONG</span> alice@example.test</div>`;
-    }
-    return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
-      <div class="pkt-row sub">alice@example.test · <span class="lock">${lockIcon(11)}</span> TLS</div>`;
+    return '';
   }
 
-  async function flyPacket(kind, gen) {
-    const el = makePacket(packetHTML(kind));
-    await move(el, pktPos('browser', el), pktPos('server', el), 1050);
+  // Where a packet starts and ends: the inner edge of the sending card facing the receiver, to the
+  // inner edge of the receiver facing the sender. Browser↔server rides the wire height; a steal to the
+  // centre rig rides a line level with the two cards.
+  function tripAnchors(fromEl, toEl, w, h) {
+    const sr = stage.getBoundingClientRect();
+    const a = fromEl.getBoundingClientRect();
+    const b = toEl.getBoundingClientRect();
+    const l2r = a.left < b.left;
+    const viaRig = fromEl === attackerCard || toEl === attackerCard;
+    const y = viaRig ? (Math.max(a.top, b.top) - sr.top) + 30 - h / 2 : geo.y - h / 2;
+    const aEdge = (l2r ? a.right : a.left) - sr.left;
+    const bEdge = (l2r ? b.left : b.right) - sr.left;
+    return {
+      from: { x: l2r ? aEdge - 18 : aEdge - w + 18, y },
+      to: { x: l2r ? bEdge - w + 18 : bEdge - 18, y }
+    };
+  }
+
+  // Send one packet from one card to another and resolve when it ARRIVES. In the stacked layout the
+  // wires are hidden, so a short sender→receiver highlight stands in for the travelling packet; order
+  // is preserved either way. A hidden tab resolves at once (finishStep handles the picture).
+  async function flyTrip(fromEl, toEl, kind, gen, ms, cls) {
+    if (gen !== state.gen) return false;
+    if (document.hidden) return gen === state.gen;
+    if (stackedQuery.matches || !animationsEnabled()) {
+      flashEl(fromEl);
+      await sleep(220);
+      if (gen !== state.gen) return false;
+      flashEl(toEl);
+      await sleep(180);
+      return gen === state.gen;
+    }
+    const el = makePacket(packetHTML(kind), cls);
+    const w = el.offsetWidth || 220;
+    const h = el.offsetHeight || 42;
+    const { from, to } = tripAnchors(fromEl, toEl, w, h);
+    flashEl(fromEl);
+    await move(el, from, to, pdur(ms || PKT_MS));
     el.remove();
+    if (gen === state.gen) flashEl(toEl);
     return gen === state.gen;
   }
 
@@ -1381,8 +1523,8 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     const passes = p.t;
     const cols = p.cols;
     const total = p.animMs;
-    const alloc = REDUCED ? 0 : 500;
-    const pause = REDUCED ? 0 : 240;
+    const alloc = reducedMotion() ? 0 : 500;
+    const pause = reducedMotion() ? 0 : 240;
     const perCol = Math.max(1, (total - alloc - (passes - 1) * pause) / (passes * cols));
     const start = performance.now();
 
@@ -1415,6 +1557,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     memWrap.querySelectorAll('.ref').forEach((c) => c.classList.remove('ref'));
     state.vis.tag = true;
     renderEngine();
+    renderBrowser(); // the browser's "Hashing…" wheel becomes a tick
     flashEl(engOut);
     flashEl(serverLog.querySelector('[data-key="derive"]'));
   }
@@ -1461,65 +1604,162 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     state.vis.verified = false;
     state.vis.failed = false;
     state.vis.compared = false;
+    state.vis.delivered = false;
+    state.vis.pwIn = false;   // the password is not on the server until this request arrives
     renderBrowser();
     renderEngine();
     renderServer();
 
-    const arrived = await flyPacket(ok ? 'login' : 'wrong', gen);
+    // 1. the login request crosses the wire; nothing in the engine moves until it arrives
+    setCue(ok ? 'The browser sends the password again across the wire over TLS…'
+              : 'A wrong password crosses the wire — one character off…');
+    const arrived = await flyTrip(browserCard, serverCard, ok ? 'login' : 'wrong', gen, PKT_MS, 'tls');
     if (!arrived || gen !== state.gen) return;
+    state.vis.pwIn = true;
+    renderEngine();
+    flashEl(enginePassword);
 
+    // 2. only now does the server recompute the tag
+    setCue('The server recomputes the tag with the salt and parameters from the stored record.');
     setFormula('verify');
     const swept = await sweepGrid(gen, 1500);
     if (!swept) return;
 
-    // Result known inside the engine; now the comparison runs byte by byte.
+    // 3. the constant-time comparison, byte by byte
     state.vis.verified = ok;
     state.vis.failed = !ok;
     renderEngine();
     passLabel.textContent = 'comparing tags…';
+    setCue('It compares all 32 bytes in constant time — no early exit.');
     await sleep(120);
     if (gen !== state.gen) return;
     const compared = await sweepBytes(gen);
     if (!compared) return;
 
+    // 4. the server writes its log line (compare finished), THEN the response travels back
     state.vis.compared = true;
-    renderAll();
+    renderEngine();
+    renderServer();
     flashEl(engOut.querySelector('#cmpVerdict'));
-    flashEl(dbRows.querySelector('.db-row'));
     flashEl(serverLog.querySelector(`[data-key="${ok ? 'login' : 'fail'}"]`));
+    setCue(ok ? 'Match. The server replies 200 OK and issues a session.'
+              : 'Mismatch. The server replies 401 — no session.');
+    const back = await flyTrip(serverCard, browserCard, ok ? 'ok200' : 'deny401', gen, PKT_MS, ok ? 'resp' : 'resp bad');
+    if (!back || gen !== state.gen) return;
+
+    // 5. the browser shows the outcome only once the response has arrived
+    state.vis.delivered = true;
+    renderBrowser();
+    flashEl(browserCard);
+  }
+
+  function maybeStartRig() {
+    if (state.step === STEPS.length - 1 && !state.rigRunning) startRig();
+  }
+
+  // The longest a step's animation may take before the page gives up waiting and shows the finished
+  // picture. Generous: a step now also waits on a request packet in and a response packet back.
+  function stepBudget(i) {
+    if (reducedMotion()) return 4000;
+    if (i === 2) return P().animMs + 5000;
+    if (i === 4 || i === 5) return 13000;
+    return 6000;
+  }
+
+  // Fallback used by the watchdog and when the tab is hidden: cancel whatever is in flight and jump to
+  // the step's finished state, so no wheel can keep turning and nothing is left half-revealed.
+  function finishStep(i) {
+    if (i !== state.step) return;
+    state.gen++;            // anything still awaiting from the old run bails out on its gen check
+    cancelAnims();
+    state.vis = targetVis(i);
+    state.animating = false;
+    state.animEnd = performance.now();
+    renderAll();
+    if (i === STEPS.length - 1) later(maybeStartRig, 300);
+  }
+
+  // The ordered on-screen sequence for an animated forward step. CAUSE BEFORE EFFECT: a packet (or, in
+  // the stacked layout, a sender→receiver highlight) crosses FIRST; only when it arrives does the
+  // receiving panel react, and in a fixed order. Every await bails out if the step changed underneath.
+  async function stepScript(i, gen) {
+    if (i === 1) {
+      // POST /signup crosses the wire; the request log and the salt appear only on arrival
+      setCue('The browser sends the form across the wire over TLS…');
+      const arrived = await flyTrip(browserCard, serverCard, 'register', gen, PKT_MS, 'tls');
+      if (!arrived || gen !== state.gen) return;
+      state.vis.reg = true;
+      renderServer();
+      renderEngine();
+      flashEl(serverLog.querySelector('[data-key="register"]'));
+      flashEl(enginePassword);
+      setCue('Received. The server draws 16 random bytes of salt from a CSPRNG.');
+      await sleep(540);
+      if (gen !== state.gen) return;
+      state.vis.salt = true;
+      renderServer();
+      renderEngine();
+      renderBrowser();
+      flashEl(serverLog.querySelector('[data-key="salt"]'));
+      flashEl(engineSalt);
+    } else if (i === 2) {
+      setCue('No new message: the server fills memory with Argon2id from the password and salt it holds.');
+      await runDerive(gen);
+    } else if (i === 3) {
+      // the verifier is written to the table, THEN 201 Created travels back to the browser
+      setCue('The server writes the verifier to the users table…');
+      await sleep(360);
+      if (gen !== state.gen) return;
+      state.vis.stored = true;
+      renderServer();
+      renderDB();
+      flashEl(dbRows.querySelector('.db-row'));
+      flashEl(serverLog.querySelector('[data-key="insert"]'));
+      setCue('Stored. The server replies 201 Created back to the browser.');
+      const back = await flyTrip(serverCard, browserCard, 'created', gen, PKT_MS, 'resp');
+      if (!back || gen !== state.gen) return;
+      state.vis.created = true;
+      renderBrowser();
+      flashEl(browserCard);
+    } else if (i === 4) {
+      await runVerify(gen, true);
+    } else if (i === 5) {
+      await runVerify(gen, false);
+    } else if (i === 6) {
+      // the stored users row travels from the database to the rig before the rig acts
+      setCue('The attacker copies the stolen users row from the database to the rig…');
+      const got = await flyTrip(serverCard, attackerCard, 'steal', gen, STEAL_MS, 'steal');
+      if (!got || gen !== state.gen) return;
+      state.vis.stolen = true;
+      flashEl(attackerCard);
+      flashEl(engOut);
+      setCue('The rig has the verifier (no password) and starts guessing offline.');
+      await sleep(400);
+      if (gen !== state.gen) return;
+      maybeStartRig();
+    }
   }
 
   async function runStepAnimation(i) {
     const gen = state.gen;
     measureGeo();
-    if (!animationsEnabled()) {
+    if (document.hidden) {
+      // nothing paints while hidden: show the finished picture at once (an ordered reveal is pointless)
       state.vis = targetVis(i);
       renderAll();
       return;
     }
     state.animating = true;
+    const watchdog = later(() => { if (gen === state.gen && state.animating) finishStep(i); }, stepBudget(i));
     try {
-      if (i === 1) {
-        const arrived = await flyPacket('register', gen);
-        if (arrived) {
-          flashEl(serverLog.querySelector('[data-key="register"]'));
-          flashEl(engineSalt);
-          flashEl(serverLog.querySelector('[data-key="salt"]'));
-        }
-      } else if (i === 2) {
-        await runDerive(gen);
-      } else if (i === 3) {
-        flashEl(dbRows.querySelector('.db-row'));
-        flashEl(serverLog.querySelector('[data-key="insert"]'));
-      } else if (i === 4) {
-        await runVerify(gen, true);
-      } else if (i === 5) {
-        await runVerify(gen, false);
-      } else if (i === 6) {
-        flashEl(engOut);
-      }
+      await stepScript(i, gen);
     } finally {
-      if (gen === state.gen) state.animating = false;
+      if (gen === state.gen) {
+        clearTimeout(watchdog);
+        activeTimers.delete(watchdog);
+        state.animating = false;
+        state.animEnd = performance.now();
+      }
     }
   }
 
@@ -1532,11 +1772,18 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     cancelAnims();
 
     state.vis = targetVis(next);
-    if (animate) {
+    // Hide what the forward animation will reveal, so each thing appears only after its cause. Done for
+    // both the wire layout and the stacked highlight layout; only a hidden tab keeps the finished state.
+    if (animate && !document.hidden) {
+      if (next === 1) { state.vis.reg = false; state.vis.salt = false; }
       if (next === 2) state.vis.tag = false;
-      if (next === 4) { state.vis.verified = false; state.vis.compared = false; }
-      if (next === 5) { state.vis.failed = false; state.vis.compared = false; }
+      if (next === 3) { state.vis.stored = false; state.vis.created = false; }
+      if (next === 4) { state.vis.verified = false; state.vis.compared = false; state.vis.delivered = false; state.vis.pwIn = false; }
+      if (next === 5) { state.vis.failed = false; state.vis.compared = false; state.vis.delivered = false; state.vis.pwIn = false; }
+      if (next === 6) state.vis.stolen = false;
     }
+    state.stepStart = performance.now();
+    state.animEnd = state.stepStart;
 
     updateNarrator();
     updateDots();
@@ -1545,8 +1792,10 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     measureGeo();
 
     stopRig(true);
-    if (next === STEPS.length - 1) {
-      later(() => { if (state.step === STEPS.length - 1 && !state.rigRunning) startRig(); }, 600);
+    // When the last step animates, the steal packet (stepScript) starts the rig once it arrives;
+    // otherwise (deep link, Back, hidden tab) start it on a short timer.
+    if (next === STEPS.length - 1 && !(animate && !document.hidden)) {
+      later(maybeStartRig, 700);
     }
 
     if (animate) runStepAnimation(next);
@@ -1559,16 +1808,26 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     updateControls();
   }
 
+  // Auto-play: a step is held for READ_MS from the moment it appears, and for at least HOLD_MS after its
+  // animation has finished, whichever is later. (Before, an animated step moved on within 0.6 s of its
+  // animation ending, and with reduced motion the whole lesson flew past in a few seconds.)
+  const READ_MS = 4500;
+  const HOLD_MS = 1500;
   function schedulePlay() {
     if (playTimer) clearTimeout(playTimer);
-    const delay = state.animating ? 600 : 4500;
-    playTimer = setTimeout(() => {
-      if (!state.playing) return;
-      if (state.animating) { schedulePlay(); return; }
-      if (state.step >= STEPS.length - 1) { stopPlay(); return; }
-      setStep(state.step + 1, { animate: true });
-      schedulePlay();
-    }, delay);
+    playTimer = setTimeout(playTick, 250);
+  }
+  function playTick() {
+    playTimer = null;
+    if (!state.playing) return;
+    if (!state.animating) {
+      const due = Math.max(state.stepStart + READ_MS, state.animEnd + HOLD_MS);
+      if (performance.now() >= due) {
+        if (state.step >= STEPS.length - 1) { stopPlay(); return; }
+        setStep(state.step + 1, { animate: true });
+      }
+    }
+    schedulePlay();
   }
 
   function togglePlay() {
@@ -1688,6 +1947,17 @@ body.expanding .wires,body.expanding .packet{opacity:0}
 
   document.addEventListener('fullscreenchange', () => {
     btnFull.textContent = document.fullscreenElement ? 'Exit' : 'Present';
+    requestAnimationFrame(measureGeo);
+  });
+
+  // A hidden tab stops painting, so an animation in progress is completed on the spot; when the tab
+  // comes back the step is already in its finished state and the wires are re-measured.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (state.animating) finishStep(state.step);
+    } else {
+      requestAnimationFrame(measureGeo);
+    }
   });
 
   // ---------- enlarge panels ----------

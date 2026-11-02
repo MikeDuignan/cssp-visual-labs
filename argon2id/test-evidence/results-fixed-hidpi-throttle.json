@@ -1,0 +1,1634 @@
+[
+ {
+  "config": "chrome-zoom125-1536x864-motion",
+  "checks": [
+   {
+    "check": "page loads at step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "reduced-motion emulation applied",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "Next -> step 2 (A fresh random salt) completes",
+    "ok": true,
+    "detail": "1.1s"
+   },
+   {
+    "check": "step 2: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 3 (Argon2id fills memory) completes",
+    "ok": true,
+    "detail": "8.4s"
+   },
+   {
+    "check": "step 3: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 4 (Only the verifier is stored) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 4: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 5 (Login: derive and compare) completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "step 5: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 6 (Wrong password, different tag) completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "step 6: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 7 (Why Argon2id) completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "step 7: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next disabled on the last step",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "Reset returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "three Nexts reach step 4",
+    "ok": true,
+    "detail": "Step 4 of 7"
+   },
+   {
+    "check": "Back returns to step 3 (tag shown, no spinner)",
+    "ok": true,
+    "detail": "Step 3 of 7 engSpinner=False"
+   },
+   {
+    "check": "Back returns to step 2",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "in-page button to step 2 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['1']"
+   },
+   {
+    "check": "in-page button -> step 2 completes",
+    "ok": true,
+    "detail": "1.1s"
+   },
+   {
+    "check": "in-page button to step 3 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['2']"
+   },
+   {
+    "check": "in-page button -> step 3 completes",
+    "ok": true,
+    "detail": "8.5s"
+   },
+   {
+    "check": "in-page button to step 4 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['3']"
+   },
+   {
+    "check": "in-page button -> step 4 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 5 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['4']"
+   },
+   {
+    "check": "in-page button -> step 5 completes",
+    "ok": true,
+    "detail": "4.5s"
+   },
+   {
+    "check": "in-page button to step 6 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['5']"
+   },
+   {
+    "check": "in-page button -> step 6 completes",
+    "ok": true,
+    "detail": "4.2s"
+   },
+   {
+    "check": "in-page button to step 7 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['6']"
+   },
+   {
+    "check": "in-page button -> step 7 completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "Start over returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 4: derivation replays and completes at m = 256 MiB",
+    "ok": true,
+    "detail": "14.2s cells=256/256 total=262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 4: grid has every cell filled",
+    "ok": true,
+    "detail": "256/256"
+   },
+   {
+    "check": "key 4: KiB total matches",
+    "ok": true,
+    "detail": "262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 1: derivation replays and completes at m = 19 MiB",
+    "ok": true,
+    "detail": "3.9s cells=19/19 total=19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 1: grid has every cell filled",
+    "ok": true,
+    "detail": "19/19"
+   },
+   {
+    "check": "key 1: KiB total matches",
+    "ok": true,
+    "detail": "19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 3: derivation replays and completes at m = 128 MiB",
+    "ok": true,
+    "detail": "11.4s cells=128/128 total=131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 3: grid has every cell filled",
+    "ok": true,
+    "detail": "128/128"
+   },
+   {
+    "check": "key 3: KiB total matches",
+    "ok": true,
+    "detail": "131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 2: derivation replays and completes at m = 64 MiB",
+    "ok": true,
+    "detail": "8.3s cells=64/64 total=65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "key 2: grid has every cell filled",
+    "ok": true,
+    "detail": "64/64"
+   },
+   {
+    "check": "key 2: KiB total matches",
+    "ok": true,
+    "detail": "65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "step 5 completes before profile switch",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "profile button light at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button heavy at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button balanced at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "auto-play reaches step 7 and stops",
+    "ok": true,
+    "detail": "41.6s, dwell per step [4.6, 4.7, 9.7, 4.4, 5.7, 6.0]"
+   },
+   {
+    "check": "auto-play gives at least 3 s on every step",
+    "ok": true,
+    "detail": "dwell [4.6, 4.7, 9.7, 4.4, 5.7, 6.0]"
+   },
+   {
+    "check": "Run the rig: click restarts the rig",
+    "ok": true,
+    "detail": "btn=Pause rig \u275a\u275a hot=48"
+   },
+   {
+    "check": "Run the rig: pause stops the counter",
+    "ok": true,
+    "detail": "btn=Run the rig \u25b8 hot=0 count 83,335 -> 83,335"
+   },
+   {
+    "check": "Run the rig: restart runs to 1,000,000",
+    "ok": true,
+    "detail": "6.1s Run again \u25b8 note=1,000,000 guesses = 16m 40s of GPU time. A 5-word passphrase"
+   },
+   {
+    "check": "rig time table: 1 million at 64 MiB = 16m 40s",
+    "ok": true,
+    "detail": "16m 40s"
+   },
+   {
+    "check": "rig passphrase row shows ~450 million years at 64 MiB",
+    "ok": true,
+    "detail": "~450 million years"
+   },
+   {
+    "check": "R resets",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "ArrowRight advances",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "ArrowLeft goes back",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 3 at step 1 switches the profile",
+    "ok": true,
+    "detail": "m = 128 MiB"
+   },
+   {
+    "check": "space starts Play",
+    "ok": true,
+    "detail": "Pause"
+   },
+   {
+    "check": "space pauses Play",
+    "ok": true,
+    "detail": "Play"
+   },
+   {
+    "check": "F again exits fullscreen",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "page still responsive after Present",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "enlarge panel opens",
+    "ok": true,
+    "detail": "True"
+   },
+   {
+    "check": "Esc restores the panel",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "derivation survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "6.1s"
+   },
+   {
+    "check": "login verify survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "2.8s"
+   },
+   {
+    "check": "no console errors or warnings",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "no network requests beyond the page itself",
+    "ok": true,
+    "detail": ""
+   }
+  ],
+  "hangs": [],
+  "console": [],
+  "requests": [
+   "file:///home/mike/Desktop/cssp-visual-labs/argon2id/index.html"
+  ],
+  "notes": [
+   "Present (F): fullscreenElement=True button='Exit'"
+  ],
+  "env": {
+   "innerWidth": 1536,
+   "innerHeight": 864,
+   "dpr": 1.25,
+   "reduced": false,
+   "stacked": false
+  },
+  "autoplay": {
+   "ok": true,
+   "total_s": 41.6,
+   "timeline": [
+    [
+     0.0,
+     "Step 1 of 7"
+    ],
+    [
+     4.6,
+     "Step 2 of 7"
+    ],
+    [
+     9.3,
+     "Step 3 of 7"
+    ],
+    [
+     19.0,
+     "Step 4 of 7"
+    ],
+    [
+     23.4,
+     "Step 5 of 7"
+    ],
+    [
+     29.1,
+     "Step 6 of 7"
+    ],
+    [
+     35.1,
+     "Step 7 of 7"
+    ]
+   ],
+   "dwell_s": [
+    4.6,
+    4.7,
+    9.7,
+    4.4,
+    5.7,
+    6.0
+   ]
+  },
+  "pass": true
+ },
+ {
+  "config": "chrome-zoom150-1280x720-motion",
+  "checks": [
+   {
+    "check": "page loads at step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "reduced-motion emulation applied",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "Next -> step 2 (A fresh random salt) completes",
+    "ok": true,
+    "detail": "1.1s"
+   },
+   {
+    "check": "step 2: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 3 (Argon2id fills memory) completes",
+    "ok": true,
+    "detail": "8.3s"
+   },
+   {
+    "check": "step 3: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 4 (Only the verifier is stored) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 4: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 5 (Login: derive and compare) completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "step 5: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 6 (Wrong password, different tag) completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "step 6: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 7 (Why Argon2id) completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "step 7: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next disabled on the last step",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "Reset returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "three Nexts reach step 4",
+    "ok": true,
+    "detail": "Step 4 of 7"
+   },
+   {
+    "check": "Back returns to step 3 (tag shown, no spinner)",
+    "ok": true,
+    "detail": "Step 3 of 7 engSpinner=False"
+   },
+   {
+    "check": "Back returns to step 2",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "in-page button to step 2 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['1']"
+   },
+   {
+    "check": "in-page button -> step 2 completes",
+    "ok": true,
+    "detail": "1.1s"
+   },
+   {
+    "check": "in-page button to step 3 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['2']"
+   },
+   {
+    "check": "in-page button -> step 3 completes",
+    "ok": true,
+    "detail": "8.3s"
+   },
+   {
+    "check": "in-page button to step 4 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['3']"
+   },
+   {
+    "check": "in-page button -> step 4 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 5 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['4']"
+   },
+   {
+    "check": "in-page button -> step 5 completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "in-page button to step 6 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['5']"
+   },
+   {
+    "check": "in-page button -> step 6 completes",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "in-page button to step 7 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['6']"
+   },
+   {
+    "check": "in-page button -> step 7 completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "Start over returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 4: derivation replays and completes at m = 256 MiB",
+    "ok": true,
+    "detail": "14.3s cells=256/256 total=262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 4: grid has every cell filled",
+    "ok": true,
+    "detail": "256/256"
+   },
+   {
+    "check": "key 4: KiB total matches",
+    "ok": true,
+    "detail": "262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 1: derivation replays and completes at m = 19 MiB",
+    "ok": true,
+    "detail": "3.9s cells=19/19 total=19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 1: grid has every cell filled",
+    "ok": true,
+    "detail": "19/19"
+   },
+   {
+    "check": "key 1: KiB total matches",
+    "ok": true,
+    "detail": "19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 3: derivation replays and completes at m = 128 MiB",
+    "ok": true,
+    "detail": "11.3s cells=128/128 total=131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 3: grid has every cell filled",
+    "ok": true,
+    "detail": "128/128"
+   },
+   {
+    "check": "key 3: KiB total matches",
+    "ok": true,
+    "detail": "131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 2: derivation replays and completes at m = 64 MiB",
+    "ok": true,
+    "detail": "8.3s cells=64/64 total=65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "key 2: grid has every cell filled",
+    "ok": true,
+    "detail": "64/64"
+   },
+   {
+    "check": "key 2: KiB total matches",
+    "ok": true,
+    "detail": "65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "step 5 completes before profile switch",
+    "ok": true,
+    "detail": "4.3s"
+   },
+   {
+    "check": "profile button light at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button heavy at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button balanced at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "auto-play reaches step 7 and stops",
+    "ok": true,
+    "detail": "41.6s, dwell per step [4.6, 4.7, 9.7, 4.4, 5.7, 6.0]"
+   },
+   {
+    "check": "auto-play gives at least 3 s on every step",
+    "ok": true,
+    "detail": "dwell [4.6, 4.7, 9.7, 4.4, 5.7, 6.0]"
+   },
+   {
+    "check": "Run the rig: click restarts the rig",
+    "ok": true,
+    "detail": "btn=Pause rig \u275a\u275a hot=48"
+   },
+   {
+    "check": "Run the rig: pause stops the counter",
+    "ok": true,
+    "detail": "btn=Run the rig \u25b8 hot=0 count 83,335 -> 83,335"
+   },
+   {
+    "check": "Run the rig: restart runs to 1,000,000",
+    "ok": true,
+    "detail": "6.1s Run again \u25b8 note=1,000,000 guesses = 16m 40s of GPU time. A 5-word passphrase"
+   },
+   {
+    "check": "rig time table: 1 million at 64 MiB = 16m 40s",
+    "ok": true,
+    "detail": "16m 40s"
+   },
+   {
+    "check": "rig passphrase row shows ~450 million years at 64 MiB",
+    "ok": true,
+    "detail": "~450 million years"
+   },
+   {
+    "check": "R resets",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "ArrowRight advances",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "ArrowLeft goes back",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 3 at step 1 switches the profile",
+    "ok": true,
+    "detail": "m = 128 MiB"
+   },
+   {
+    "check": "space starts Play",
+    "ok": true,
+    "detail": "Pause"
+   },
+   {
+    "check": "space pauses Play",
+    "ok": true,
+    "detail": "Play"
+   },
+   {
+    "check": "F again exits fullscreen",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "page still responsive after Present",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "enlarge panel opens",
+    "ok": true,
+    "detail": "True"
+   },
+   {
+    "check": "Esc restores the panel",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "derivation survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "6.1s"
+   },
+   {
+    "check": "login verify survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "2.8s"
+   },
+   {
+    "check": "no console errors or warnings",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "no network requests beyond the page itself",
+    "ok": true,
+    "detail": ""
+   }
+  ],
+  "hangs": [],
+  "console": [],
+  "requests": [
+   "file:///home/mike/Desktop/cssp-visual-labs/argon2id/index.html"
+  ],
+  "notes": [
+   "Present (F): fullscreenElement=True button='Exit'"
+  ],
+  "env": {
+   "innerWidth": 1280,
+   "innerHeight": 720,
+   "dpr": 1.5,
+   "reduced": false,
+   "stacked": false
+  },
+  "autoplay": {
+   "ok": true,
+   "total_s": 41.6,
+   "timeline": [
+    [
+     0.0,
+     "Step 1 of 7"
+    ],
+    [
+     4.6,
+     "Step 2 of 7"
+    ],
+    [
+     9.3,
+     "Step 3 of 7"
+    ],
+    [
+     19.0,
+     "Step 4 of 7"
+    ],
+    [
+     23.4,
+     "Step 5 of 7"
+    ],
+    [
+     29.1,
+     "Step 6 of 7"
+    ],
+    [
+     35.1,
+     "Step 7 of 7"
+    ]
+   ],
+   "dwell_s": [
+    4.6,
+    4.7,
+    9.7,
+    4.4,
+    5.7,
+    6.0
+   ]
+  },
+  "pass": true
+ },
+ {
+  "config": "chrome-zoom200-960x540-motion",
+  "checks": [
+   {
+    "check": "page loads at step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "reduced-motion emulation applied",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "Next -> step 2 (A fresh random salt) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 2: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 3 (Argon2id fills memory) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 3: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 4 (Only the verifier is stored) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 4: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 5 (Login: derive and compare) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 5: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 6 (Wrong password, different tag) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 6: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 7 (Why Argon2id) completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "step 7: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next disabled on the last step",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "Reset returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "three Nexts reach step 4",
+    "ok": true,
+    "detail": "Step 4 of 7"
+   },
+   {
+    "check": "Back returns to step 3 (tag shown, no spinner)",
+    "ok": true,
+    "detail": "Step 3 of 7 engSpinner=False"
+   },
+   {
+    "check": "Back returns to step 2",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "in-page button to step 2 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['1']"
+   },
+   {
+    "check": "in-page button -> step 2 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 3 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['2']"
+   },
+   {
+    "check": "in-page button -> step 3 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 4 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['3']"
+   },
+   {
+    "check": "in-page button -> step 4 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 5 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['4']"
+   },
+   {
+    "check": "in-page button -> step 5 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 6 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['5']"
+   },
+   {
+    "check": "in-page button -> step 6 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 7 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['6']"
+   },
+   {
+    "check": "in-page button -> step 7 completes",
+    "ok": true,
+    "detail": "6.6s"
+   },
+   {
+    "check": "Start over returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 4: derivation replays and completes at m = 256 MiB",
+    "ok": true,
+    "detail": "0.0s cells=256/256 total=262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 4: grid has every cell filled",
+    "ok": true,
+    "detail": "256/256"
+   },
+   {
+    "check": "key 4: KiB total matches",
+    "ok": true,
+    "detail": "262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 1: derivation replays and completes at m = 19 MiB",
+    "ok": true,
+    "detail": "0.0s cells=19/19 total=19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 1: grid has every cell filled",
+    "ok": true,
+    "detail": "19/19"
+   },
+   {
+    "check": "key 1: KiB total matches",
+    "ok": true,
+    "detail": "19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 3: derivation replays and completes at m = 128 MiB",
+    "ok": true,
+    "detail": "0.0s cells=128/128 total=131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 3: grid has every cell filled",
+    "ok": true,
+    "detail": "128/128"
+   },
+   {
+    "check": "key 3: KiB total matches",
+    "ok": true,
+    "detail": "131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 2: derivation replays and completes at m = 64 MiB",
+    "ok": true,
+    "detail": "0.0s cells=64/64 total=65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "key 2: grid has every cell filled",
+    "ok": true,
+    "detail": "64/64"
+   },
+   {
+    "check": "key 2: KiB total matches",
+    "ok": true,
+    "detail": "65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "step 5 completes before profile switch",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "profile button light at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button heavy at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button balanced at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "auto-play reaches step 7 and stops",
+    "ok": true,
+    "detail": "33.7s, dwell per step [4.6, 4.7, 4.3, 4.6, 4.4, 4.6]"
+   },
+   {
+    "check": "auto-play gives at least 3 s on every step",
+    "ok": true,
+    "detail": "dwell [4.6, 4.7, 4.3, 4.6, 4.4, 4.6]"
+   },
+   {
+    "check": "Run the rig: click restarts the rig",
+    "ok": true,
+    "detail": "btn=Pause rig \u275a\u275a hot=48"
+   },
+   {
+    "check": "Run the rig: pause stops the counter",
+    "ok": true,
+    "detail": "btn=Run the rig \u25b8 hot=0 count 83,335 -> 83,335"
+   },
+   {
+    "check": "Run the rig: restart runs to 1,000,000",
+    "ok": true,
+    "detail": "6.1s Run again \u25b8 note=1,000,000 guesses = 16m 40s of GPU time. A 5-word passphrase"
+   },
+   {
+    "check": "rig time table: 1 million at 64 MiB = 16m 40s",
+    "ok": true,
+    "detail": "16m 40s"
+   },
+   {
+    "check": "rig passphrase row shows ~450 million years at 64 MiB",
+    "ok": true,
+    "detail": "~450 million years"
+   },
+   {
+    "check": "R resets",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "ArrowRight advances",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "ArrowLeft goes back",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 3 at step 1 switches the profile",
+    "ok": true,
+    "detail": "m = 128 MiB"
+   },
+   {
+    "check": "space starts Play",
+    "ok": true,
+    "detail": "Pause"
+   },
+   {
+    "check": "space pauses Play",
+    "ok": true,
+    "detail": "Play"
+   },
+   {
+    "check": "F again exits fullscreen",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "page still responsive after Present",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "enlarge panel opens",
+    "ok": true,
+    "detail": "True"
+   },
+   {
+    "check": "Esc restores the panel",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "derivation survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "login verify survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "no console errors or warnings",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "no network requests beyond the page itself",
+    "ok": true,
+    "detail": ""
+   }
+  ],
+  "hangs": [],
+  "console": [],
+  "requests": [
+   "file:///home/mike/Desktop/cssp-visual-labs/argon2id/index.html"
+  ],
+  "notes": [
+   "Present (F): fullscreenElement=True button='Exit'"
+  ],
+  "env": {
+   "innerWidth": 960,
+   "innerHeight": 540,
+   "dpr": 2,
+   "reduced": false,
+   "stacked": true
+  },
+  "autoplay": {
+   "ok": true,
+   "total_s": 33.7,
+   "timeline": [
+    [
+     0.0,
+     "Step 1 of 7"
+    ],
+    [
+     4.6,
+     "Step 2 of 7"
+    ],
+    [
+     9.3,
+     "Step 3 of 7"
+    ],
+    [
+     13.6,
+     "Step 4 of 7"
+    ],
+    [
+     18.2,
+     "Step 5 of 7"
+    ],
+    [
+     22.6,
+     "Step 6 of 7"
+    ],
+    [
+     27.2,
+     "Step 7 of 7"
+    ]
+   ],
+   "dwell_s": [
+    4.6,
+    4.7,
+    4.3,
+    4.6,
+    4.4,
+    4.6
+   ]
+  },
+  "pass": true
+ },
+ {
+  "config": "chrome-zoom150-1280x720-reduce",
+  "checks": [
+   {
+    "check": "page loads at step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "reduced-motion emulation applied",
+    "ok": true,
+    "detail": "True"
+   },
+   {
+    "check": "Next -> step 2 (A fresh random salt) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 2: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 3 (Argon2id fills memory) completes",
+    "ok": true,
+    "detail": "0.3s"
+   },
+   {
+    "check": "step 3: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 4 (Only the verifier is stored) completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "step 4: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 5 (Login: derive and compare) completes",
+    "ok": true,
+    "detail": "0.4s"
+   },
+   {
+    "check": "step 5: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 6 (Wrong password, different tag) completes",
+    "ok": true,
+    "detail": "0.4s"
+   },
+   {
+    "check": "step 6: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next -> step 7 (Why Argon2id) completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "step 7: no spinner left on screen",
+    "ok": true,
+    "detail": "browserSpinner=False engSpinner=False"
+   },
+   {
+    "check": "Next disabled on the last step",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "Reset returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "three Nexts reach step 4",
+    "ok": true,
+    "detail": "Step 4 of 7"
+   },
+   {
+    "check": "Back returns to step 3 (tag shown, no spinner)",
+    "ok": true,
+    "detail": "Step 3 of 7 engSpinner=False"
+   },
+   {
+    "check": "Back returns to step 2",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "in-page button to step 2 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['1']"
+   },
+   {
+    "check": "in-page button -> step 2 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 3 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['2']"
+   },
+   {
+    "check": "in-page button -> step 3 completes",
+    "ok": true,
+    "detail": "0.3s"
+   },
+   {
+    "check": "in-page button to step 4 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['3']"
+   },
+   {
+    "check": "in-page button -> step 4 completes",
+    "ok": true,
+    "detail": "0.0s"
+   },
+   {
+    "check": "in-page button to step 5 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['4']"
+   },
+   {
+    "check": "in-page button -> step 5 completes",
+    "ok": true,
+    "detail": "0.4s"
+   },
+   {
+    "check": "in-page button to step 6 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['5']"
+   },
+   {
+    "check": "in-page button -> step 6 completes",
+    "ok": true,
+    "detail": "0.4s"
+   },
+   {
+    "check": "in-page button to step 7 is offered",
+    "ok": true,
+    "detail": "after 0.0s buttons=['6']"
+   },
+   {
+    "check": "in-page button -> step 7 completes",
+    "ok": true,
+    "detail": "6.7s"
+   },
+   {
+    "check": "Start over returns to step 1",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 4: derivation replays and completes at m = 256 MiB",
+    "ok": true,
+    "detail": "0.8s cells=256/256 total=262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 4: grid has every cell filled",
+    "ok": true,
+    "detail": "256/256"
+   },
+   {
+    "check": "key 4: KiB total matches",
+    "ok": true,
+    "detail": "262,144 \u00d7 1 KiB \u00b7 4 lanes \u00d7 64 MiB"
+   },
+   {
+    "check": "key 1: derivation replays and completes at m = 19 MiB",
+    "ok": true,
+    "detail": "0.3s cells=19/19 total=19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 1: grid has every cell filled",
+    "ok": true,
+    "detail": "19/19"
+   },
+   {
+    "check": "key 1: KiB total matches",
+    "ok": true,
+    "detail": "19,456 \u00d7 1 KiB \u00b7 1 lane \u00d7 19 MiB"
+   },
+   {
+    "check": "key 3: derivation replays and completes at m = 128 MiB",
+    "ok": true,
+    "detail": "0.5s cells=128/128 total=131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 3: grid has every cell filled",
+    "ok": true,
+    "detail": "128/128"
+   },
+   {
+    "check": "key 3: KiB total matches",
+    "ok": true,
+    "detail": "131,072 \u00d7 1 KiB \u00b7 4 lanes \u00d7 32 MiB"
+   },
+   {
+    "check": "key 2: derivation replays and completes at m = 64 MiB",
+    "ok": true,
+    "detail": "0.3s cells=64/64 total=65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "key 2: grid has every cell filled",
+    "ok": true,
+    "detail": "64/64"
+   },
+   {
+    "check": "key 2: KiB total matches",
+    "ok": true,
+    "detail": "65,536 \u00d7 1 KiB \u00b7 4 lanes \u00d7 16 MiB"
+   },
+   {
+    "check": "step 5 completes before profile switch",
+    "ok": true,
+    "detail": "0.4s"
+   },
+   {
+    "check": "profile button light at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button heavy at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "profile button balanced at step 5 keeps the comparison complete",
+    "ok": true,
+    "detail": "0.0s verdict=match ok"
+   },
+   {
+    "check": "auto-play reaches step 7 and stops",
+    "ok": true,
+    "detail": "33.7s, dwell per step [4.6, 4.7, 4.3, 4.6, 4.4, 4.6]"
+   },
+   {
+    "check": "auto-play gives at least 3 s on every step",
+    "ok": true,
+    "detail": "dwell [4.6, 4.7, 4.3, 4.6, 4.4, 4.6]"
+   },
+   {
+    "check": "Run the rig: click restarts the rig",
+    "ok": true,
+    "detail": "btn=Pause rig \u275a\u275a hot=48"
+   },
+   {
+    "check": "Run the rig: pause stops the counter",
+    "ok": true,
+    "detail": "btn=Run the rig \u25b8 hot=0 count 83,335 -> 83,335"
+   },
+   {
+    "check": "Run the rig: restart runs to 1,000,000",
+    "ok": true,
+    "detail": "6.1s Run again \u25b8 note=1,000,000 guesses = 16m 40s of GPU time. A 5-word passphrase"
+   },
+   {
+    "check": "rig time table: 1 million at 64 MiB = 16m 40s",
+    "ok": true,
+    "detail": "16m 40s"
+   },
+   {
+    "check": "rig passphrase row shows ~450 million years at 64 MiB",
+    "ok": true,
+    "detail": "~450 million years"
+   },
+   {
+    "check": "R resets",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "ArrowRight advances",
+    "ok": true,
+    "detail": "Step 2 of 7"
+   },
+   {
+    "check": "ArrowLeft goes back",
+    "ok": true,
+    "detail": "Step 1 of 7"
+   },
+   {
+    "check": "key 3 at step 1 switches the profile",
+    "ok": true,
+    "detail": "m = 128 MiB"
+   },
+   {
+    "check": "space starts Play",
+    "ok": true,
+    "detail": "Pause"
+   },
+   {
+    "check": "space pauses Play",
+    "ok": true,
+    "detail": "Play"
+   },
+   {
+    "check": "F again exits fullscreen",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "page still responsive after Present",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "enlarge panel opens",
+    "ok": true,
+    "detail": "True"
+   },
+   {
+    "check": "Esc restores the panel",
+    "ok": true,
+    "detail": "False"
+   },
+   {
+    "check": "derivation survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "0.1s"
+   },
+   {
+    "check": "login verify survives a resize across the breakpoint",
+    "ok": true,
+    "detail": "0.1s"
+   },
+   {
+    "check": "no console errors or warnings",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "check": "no network requests beyond the page itself",
+    "ok": true,
+    "detail": ""
+   }
+  ],
+  "hangs": [],
+  "console": [],
+  "requests": [
+   "file:///home/mike/Desktop/cssp-visual-labs/argon2id/index.html"
+  ],
+  "notes": [
+   "Present (F): fullscreenElement=True button='Exit'"
+  ],
+  "env": {
+   "innerWidth": 1280,
+   "innerHeight": 720,
+   "dpr": 1.5,
+   "reduced": true,
+   "stacked": false
+  },
+  "autoplay": {
+   "ok": true,
+   "total_s": 33.7,
+   "timeline": [
+    [
+     0.0,
+     "Step 1 of 7"
+    ],
+    [
+     4.6,
+     "Step 2 of 7"
+    ],
+    [
+     9.3,
+     "Step 3 of 7"
+    ],
+    [
+     13.6,
+     "Step 4 of 7"
+    ],
+    [
+     18.2,
+     "Step 5 of 7"
+    ],
+    [
+     22.6,
+     "Step 6 of 7"
+    ],
+    [
+     27.2,
+     "Step 7 of 7"
+    ]
+   ],
+   "dwell_s": [
+    4.6,
+    4.7,
+    4.3,
+    4.6,
+    4.4,
+    4.6
+   ]
+  },
+  "pass": true
+ }
+]

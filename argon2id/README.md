@@ -12,7 +12,9 @@ xdg-open index.html
 python3 -m http.server 8000   # then http://localhost:8000/argon2id/
 ```
 
-Best at 1280×720 or larger. Below 1260px the stage stacks and the wire animation is disabled. Respects `prefers-reduced-motion`.
+Best at 1280×720 or larger. Below 1260px the stage stacks and the wire animation is disabled. Respects `prefers-reduced-motion` (animations become instant; the wire flow and spinners stop).
+
+No step can get stuck waiting: every animated wait has a time budget, and if an animation cannot finish (the tab is in the background, the page is throttled, an old browser lacks the Web Animations API) the page jumps to that step's finished picture. The browser card's wheel turns only while the server is actually working on something and then becomes a tick.
 
 ---
 
@@ -21,12 +23,14 @@ Best at 1280×720 or larger. Below 1260px the stage stacks and the wire animatio
 | # | Step | What happens |
 |---|------|--------------|
 | 1 | A password arrives | Alice creates an account; the password crosses the wire over TLS and exists briefly in server memory. The browser sends only the password — the server chooses the salt and Argon2id parameters |
-| 2 | A fresh random salt | 16 bytes from a CSPRNG, stored per user; the salt is public and not secret |
-| 3 | Argon2id fills memory | The engine allocates the selected profile (default 64 MiB) and fills its lanes through the configured passes; the first half of pass 1 is data-independent, the rest data-dependent |
-| 4 | Only the verifier is stored | A 32-byte tag is encoded with the salt and parameters into a PHC string; the plaintext is discarded |
-| 5 | Login: derive and compare | The server reads the salt/params from the PHC string, reruns Argon2id, and compares the tags in constant time |
-| 6 | Wrong password, different tag | One changed character gives a completely different tag; the constant-time compare fails; 401, no session |
-| 7 | Why Argon2id | The attacker rig tries guesses offline; a million is minutes, a billion days, a trillion years; a strong passphrase is far beyond. Salt, rate limiting, and entropy still matter |
+| 2 | A fresh random salt | 16 bytes from a CSPRNG, stored per user; the salt is public and not secret. The browser card shows "Preparing your account…" while the request is in flight, then "Salt generated" |
+| 3 | Argon2id fills memory | The engine allocates the selected profile (default 64 MiB) and fills its lanes through the configured passes; the first half of pass 1 is data-independent, the rest data-dependent. The browser card shows "Hashing with Argon2id…" until the fill finishes, then "Verifier derived" |
+| 4 | Only the verifier is stored | A 32-byte tag is encoded with the salt and parameters into a PHC string and written to the users table; the plaintext is discarded. A **201 Created** packet then travels back to the browser, which only then shows "Account created" |
+| 5 | Login: derive and compare | A **POST /login** packet crosses the wire; only on arrival does the server read the salt/params from the PHC string, rerun Argon2id, and compare the tags in constant time. A **200 OK** packet travels back before the browser shows "Welcome back" |
+| 6 | Wrong password, different tag | The wrong password crosses the wire; one changed character gives a completely different tag; the constant-time compare fails; a **401** packet travels back, then "Incorrect password", no session |
+| 7 | Why Argon2id | The stolen users row (the PHC verifier, no password) is shown travelling from the database to the attacker rig; only when it arrives does the rig start guessing offline. The narration states the time for a million, a billion and a trillion guesses at the selected profile (16m 40s, 11.6 days, 31.7 years at 64 MiB); a strong passphrase is far beyond. Salt, rate limiting, and entropy still matter |
+
+Every message between the browser and the server is drawn as a labelled packet on the wire (lock icon and "TLS" where encrypted), and **nothing on the server side appears until the packet that causes it has arrived**: request log line, then salt, then memory fill, then the users row, then the response. A one-line caption under the step text names what is happening ("The browser sends the form across the wire…", "Received. The server draws 16 random bytes of salt."). Below 1260 px, where the wire is hidden, the packet becomes a short sender → receiver highlight in the same order.
 
 ![Verified login](screenshot-verify.png)
 
@@ -35,7 +39,7 @@ Best at 1280×720 or larger. Below 1260px the stage stacks and the wire animatio
 | Action | Key / UI |
 |---|---|
 | Next / back | `→` / `←` (also PageDown / PageUp) |
-| Play / pause | `Space`; waits for the current animation, then holds ~4.5 s before advancing |
+| Play / pause | `Space`; holds each step for about 4.5 s, and for at least 1.5 s after its animation has finished, before advancing |
 | Jump to a step | Top-center dots |
 | Reset | `R` |
 | Cost profile | Engine-header selector (server-side), or `1` / `2` / `3` / `4` |
@@ -71,7 +75,7 @@ The memory grid is **to scale**: **one block = 1 MiB = 1,024 real KiB blocks**. 
 
 ![128 MiB profile](screenshot-128.png)
 
-The **19 MiB / t=2 / p=1** profile follows OWASP's Password Storage Cheat Sheet minimum for Argon2id (19,456 KiB). **64 MiB / t=3 / p=4** is RFC 9106's second recommended option. **128 MiB** and **256 MiB** are valid, heavier demonstration profiles. The tags shown are real Argon2id outputs for each configuration.
+The **19 MiB / t=2 / p=1** profile is one of the equally strong minimum settings in OWASP's Password Storage Cheat Sheet for Argon2id (m=19456 KiB, t=2, p=1; the others trade memory for iterations, from 46 MiB / t=1 to 7 MiB / t=5). **64 MiB / t=3 / p=4** is RFC 9106's second recommended option (its first is 2 GiB, t=1, p=4, which is too large to draw to scale here). **128 MiB** and **256 MiB** are valid, heavier demonstration profiles. The tags shown are real Argon2id outputs for each configuration.
 
 The attacker rig changes with the profile too: 19 MiB/guess fits about 1,293 concurrent guesses in 24 GiB; 64 MiB fits 384; 128 MiB fits 192; 256 MiB fits 96. The guess-rate bars are illustrative.
 
@@ -84,7 +88,7 @@ The center panel is an offline rig with a 24 GiB GPU. At the selected profile, 2
 | 1,000,000 | 16m 40s |
 | 1,000,000,000 | ~11.6 days |
 | 1,000,000,000,000 | ~31.7 years |
-| 5-word passphrase (~2.8×10¹⁹) | ~450 million years |
+| 5-word Diceware passphrase, on average (half of 7776⁵ ≈ 2.8×10¹⁹) | ~450 million years |
 
 A million guesses is a minute-scale warmup. Meaningful password search is billions to trillions of guesses, and a strong passphrase moves the target by many orders of magnitude. The rate is illustrative; the capacity arithmetic (24 GiB divided by memory-per-guess) is real.
 
@@ -114,7 +118,7 @@ $argon2id$v=19$m=65536,t=3,p=4$<salt base64 no padding>$<tag base64 no padding>
 
 The salt is 16 bytes (22 base64 characters); the tag is 32 bytes (43 base64 characters).
 
-The **timing** is measured on one machine and varies by hardware; the **animation** is deliberately slowed to 3.6 / 8 / 11 / 14 seconds so the work is visible. The **cracker rates** (`~2×10²` to `~5×10³ guesses/s` depending on profile, versus `~10⁹/s` for SHA-256) are illustrative orders of magnitude. The arithmetic that matters is real: the GPU capacity values are just 24 GiB divided by the profile's memory cost.
+The **timing** is measured on one machine and varies by hardware; the **animation** is deliberately slowed to 3.6 / 8 / 11 / 14 seconds so the work is visible. The **cracker rates** (`~2×10²` to `~5×10³ guesses/s` depending on profile, versus `~10¹⁰/s` for SHA-256) are illustrative orders of magnitude: a single RTX 4090 benchmarks at about 2×10¹⁰ SHA-256 hashes per second in hashcat, while no reliable public Argon2id GPU benchmark exists for these exact parameters, so the Argon2id rates are a memory-bandwidth estimate and, if anything, generous to the attacker. The arithmetic that matters is real: the GPU capacity values are just 24 GiB divided by the profile's memory cost.
 
 The network is simulated; the browser form does not send anything.
 
