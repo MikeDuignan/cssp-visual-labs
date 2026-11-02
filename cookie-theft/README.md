@@ -15,7 +15,7 @@ open index.html              # macOS
 python3 -m http.server 8000  # then visit http://localhost:8000
 ```
 
-Best at **1280×720 or larger**. Below 1100px the layout stacks vertically and the wire animation is disabled (everything else still works). Honors `prefers-reduced-motion`.
+Best at **1280×720 or larger**. Below 1100px the layout stacks vertically, the wire animation is disabled and the control bar sticks to the top of the page (everything else still works). Note that browser zoom shrinks the CSS viewport: a 1920px screen at 175% zoom is under 1100px and stacks. Honors `prefers-reduced-motion`. Every animation has a timeout, so a step always completes, including in a background tab.
 
 ---
 
@@ -34,13 +34,13 @@ The six steps:
 | 3 | The server issues a cookie | Server mints a session ID; green `Set-Cookie` ticket flies back; jar fills |
 | 4 | Every request carries the cookie | `GET /account` with `Cookie: session=…`; attacker copies it; account renders |
 | 5 | The attacker replays it | Red replay ticket goes attacker → server; server returns Alice's balance |
-| 6 | The defense: encrypt the wire | Flip to HTTPS; same request, but the capture is ciphertext |
+| 6 | The defense: encrypt the wire | The request runs once more in the clear; flip to HTTPS and it runs again inside the TLS tunnel, and the capture is ciphertext |
 
 ### Controls
 
 | Action | Key / UI |
 |---|---|
-| Start / continue the login | Click **Sign in** in the browser, then **Continue to /account** |
+| Start / continue the login | Click **Sign in** in the browser; when the login has landed the button becomes **Continue → server reply**; after the cookie arrives, **Continue to /account** |
 | Next / back | `→` / `←` (also PageDown / PageUp) |
 | Play / pause | `Space`; auto-advances every ~3.8 s |
 | Jump to a step | Top center dots |
@@ -63,19 +63,19 @@ index.html?step=4&attacker=0       same story with no attacker
 
 ## Suggested teaching script
 
-**Step 1 — Setup.** Ask where Alice's identity lives once she is logged in. If someone is on the same Wi-Fi, what can they see? Establish that the connection is plain HTTP, so the wire is readable.
+**Step 1 — Setup.** Ask where Alice's identity lives once she is logged in. If someone is on the same Wi-Fi, what can they see? Establish that the connection is plain HTTP, so the wire is readable, and that the attacker had to get *into the path* (ARP spoofing, a rogue access point, a mirror port): being on the same switched network is not enough by itself.
 
-**Step 2 — Login.** Only `POST /login` travels. There is no session yet, so the browser has nothing to attach. The password is verified once; something else must keep her logged in.
+**Step 2 — Login.** Only `POST /login` travels. There is no session yet, so the browser has nothing to attach. Point at the capture panel: over plain HTTP the attacker has already read the password. The password is verified once; something else must keep her logged in. Click **Continue → server reply** (or press →) to see the reply.
 
 **Step 3 — Session.** Point at both sides: the **server-side session store** holds `session → alice`, and the **browser cookie jar** holds the ID. The server generated a random ID; the browser was simply handed it. Note the response header: `Set-Cookie`.
 
 **Step 4 — The cookie returns.** This is the core idea. The `Cookie: session=…` header is the *only* thing identifying Alice. It is a **bearer token**: possession is identity. The attacker lets the original request through untouched, so Alice notices nothing.
 
-**Step 5 — Replay.** Look at the server log: the replay came from `172.28.0.30` instead of `172.28.0.20`, yet the server returned the same account. Sessions are looked up by ID, not by who is asking. Ask: what could the server have done to notice?
+**Step 5 — Replay.** Look at the server log: the replay came from `172.28.0.30` instead of `172.28.0.20`, yet the server returned the same account. Sessions are looked up by ID, not by who is asking; the server *could* notice the change of address, it just does not check. Ask: what could the server have done to notice?
 
-**Step 6 — Defense.** Flip the connection to HTTPS (or use the **Run over HTTPS** button). The cookie still travels, but the capture panel shows TLS application data instead of a readable header. Then use the four cards to separate the controls:
+**Step 6 — Defense.** Flip the connection to HTTPS (or use the **Run over HTTPS** button). The cookie still travels, but the capture panel shows TLS application data instead of a readable header (and a line listing what TLS does *not* hide: addresses, the server name, sizes). Then use the four cards to separate the controls:
 
-- **TLS** is what stops *this* attack — encryption in transit.
+- **TLS** is what stops *this* attack — encryption in transit — **together with the Secure attribute**: without `Secure`, an attacker on the path can provoke one plain `http://shop.local/` request and the browser sends the cookie in the clear anyway (RFC 6265 §8.3).
 - **HttpOnly** stops JavaScript reading `document.cookie` (XSS). It would not have helped at all here.
 - **Secure** keeps the browser from sending the cookie over plain HTTP.
 - **SameSite** limits cross-site requests (CSRF); it is not a confidentiality control.
@@ -116,10 +116,10 @@ Then harden the same app: TLS, `Secure; HttpOnly; SameSite=Lax`, short expiry, s
 Everything lives in `index.html`:
 
 - `COOKIE` near the top of the script — the demo session ID.
-- `STEPS` — titles, tags, and narration text. Edit these to match your course's wording.
+- `STEPS` — titles, tags, and narration text (`text`, plus optional `https` and `noAttacker` variants shown when the toggles change the story). Edit these to match your course's wording.
 - `accountHTML()` — Alice's account page and balance.
 - `renderServer()` / `renderCapture()` — the log entries and capture text.
-- Timings: search for `1050`, `1150`, `1500` (packet durations) and `3800` (auto-play interval).
+- Timings: search for `1300` (login and Set-Cookie flights), `1500` (request), `1450` (replay), `GRACE_MS` (the timeout every flight has) and `3800` (auto-play interval). Every panel change waits for its packet to arrive (the `state.vis` flags), so a log line never appears before the packet that causes it.
 - Colors and fonts: CSS variables at the top of the `<style>` block.
 
 There are no external fonts, images, or network requests. The screenshots in this README were generated with headless Chrome.

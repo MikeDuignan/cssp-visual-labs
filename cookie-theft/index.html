@@ -193,7 +193,8 @@ code{font-family:var(--mono)}
 .login-btn:active{transform:translateY(1px)}
 .login-btn:focus-visible{outline:2px solid #7ab09d;outline-offset:2px}
 .login-btn.busy{background:#5d8b7d}
-.login-btn.invite{animation:invite 1.9s ease-in-out infinite}
+.login-btn.invite,.continue-btn.invite{animation:invite 1.9s ease-in-out infinite}
+.login-btn.sent{background:#2f5d50}
 @keyframes invite{0%,100%{box-shadow:0 0 0 0 rgba(47,93,80,0)}50%{box-shadow:0 0 0 4px rgba(47,93,80,.22)}}
 .tiny{margin:8px 0 0;text-align:center;font-size:8.5px;color:#a59a8a}
 .mini-spin{width:10px;height:10px;border-radius:50%;border:2px solid rgba(246,241,232,.3);border-top-color:#f6f1e8;animation:spin .8s linear infinite}
@@ -398,7 +399,8 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   .app{height:auto;min-height:100vh}
   .dots{display:none}
   .hint{display:none}
-  .topbar{flex-wrap:wrap}
+  /* keep Back / Play / Next / Reset reachable while the stacked page scrolls */
+  .topbar{flex-wrap:wrap;position:sticky;top:0;z-index:60;padding:8px 0;background:rgba(10,16,24,.94);border-bottom:1px solid var(--line)}
   .stage{display:flex;flex-direction:column;flex:none}
   .wires{display:none}
   .browser,.server{min-height:440px}
@@ -505,7 +507,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
       <section class="card capture" id="captureCard" aria-label="Attacker capture">
         <div class="cap-head">
           <span><span class="live-dot" style="display:inline-block;vertical-align:middle;margin-right:5px"></span><strong>attacker capture</strong></span>
-          <span class="cap-tool">tcpdump</span>
+          <span class="cap-tool">tcpdump -A</span>
         </div>
         <div class="cap-log" id="capLog"></div>
         <div class="cap-result" id="capResult" hidden></div>
@@ -564,16 +566,22 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   const COOKIE_LABEL = 'session=' + COOKIE;
   const PACKET_LABEL = 'session=' + COOKIE.slice(0, 16) + '…';
 
+  // `text` is the normal narration (HTTP, attacker on the wire). `https` and `noAttacker` are
+  // short variants shown when the toggles put the stage in a state the normal text would contradict.
   const STEPS = [
     {
       tag: 'setup',
       title: 'One network, one attacker',
-      text: 'Alice opens shop.local and gets a login form. The attacker is on the same network — every packet between her browser and the server passes through their machine. The connection is plain HTTP, so nothing on the wire is hidden.'
+      text: 'Alice opens shop.local and gets a login form. The attacker is on the same network and has put their machine in the path — by ARP spoofing the LAN, say, or by running the Wi-Fi access point — so every packet between her browser and the server passes through it. The connection is plain HTTP, so nothing on the wire is hidden.',
+      https: 'Alice opens shop.local and gets a login form. The attacker is on the same network and has put their machine in the path, so every packet between her browser and the server passes through it. The connection is HTTPS, so what passes is encrypted. Switch to HTTP to see the attack in the clear.',
+      noAttacker: 'Alice opens shop.local and gets a login form. Nobody is tapping the wire this time: the attacker toggle is off. The connection is plain HTTP, so anyone who did get into the path could read everything.'
     },
     {
       tag: 'sign in',
       title: 'Alice logs in',
-      text: 'Alice submits her email and password. She has no session yet, so the browser sends nothing but the login request. The server is about to decide who she is.'
+      text: 'Alice submits her email and password. She has no session yet, so the browser sends nothing but the login request. Over plain HTTP the attacker can read that too, password included. The server is about to decide who she is.',
+      https: 'Alice submits her email and password. She has no session yet, so the browser sends nothing but the login request, and over HTTPS it travels encrypted. The server is about to decide who she is.',
+      noAttacker: 'Alice submits her email and password. She has no session yet, so the browser sends nothing but the login request. The server is about to decide who she is.'
     },
     {
       tag: 'session',
@@ -583,19 +591,31 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     {
       tag: 'cookie returns',
       title: 'Every request carries the cookie',
-      text: 'From now on, the browser attaches Cookie: session=… to every request. That header is the only thing identifying Alice — a bearer token. The attacker, sitting in the path, keeps a copy and lets the original through. Alice notices nothing.'
+      text: 'From now on, the browser attaches Cookie: session=… to every request to shop.local. That header is the only thing identifying Alice — a bearer token: whoever holds it is Alice. The attacker, sitting in the path, keeps a copy and lets the original through. Alice notices nothing.',
+      https: 'From now on, the browser attaches Cookie: session=… to every request to shop.local. That header is the only thing identifying Alice — a bearer token. Over HTTPS it travels inside the TLS tunnel: the attacker in the path captures ciphertext and never sees the cookie.',
+      noAttacker: 'From now on, the browser attaches Cookie: session=… to every request to shop.local. That header is the only thing identifying Alice — a bearer token: whoever holds it is Alice. With nobody tapping the wire, nobody copies it.'
     },
     {
       tag: 'replay',
       title: 'The attacker replays the cookie',
-      text: 'The attacker sends the same header from their own machine. The server looks up the session ID, finds Alice, and returns her account. The request never came from Alice’s browser, and the server cannot tell the difference.'
+      text: 'The attacker sends the same header from their own machine. The server looks up the session ID, finds Alice, and returns her account. The request never came from Alice’s browser — the log even shows a different address — but the server only checks the cookie, and whoever holds the cookie is Alice.',
+      https: 'Over HTTPS there is nothing to replay: the attacker captured ciphertext, not the cookie. Switch back to HTTP to watch the replay.',
+      noAttacker: 'With no attacker in the path there is no stolen copy to replay. Switch the attacker back on to watch the replay.'
     },
     {
       tag: 'defense',
       title: 'The defense: encrypt the wire',
-      text: 'Flip the connection to HTTPS and run the same request. The cookie still travels, but inside a TLS tunnel — the attacker captures ciphertext, not a session. HttpOnly and SameSite matter too, but they solve different problems; only TLS stops this attack.'
+      text: 'Flip the connection to HTTPS and run the same request. The cookie still travels, but inside a TLS tunnel — the attacker captures ciphertext, not a session. HttpOnly and SameSite matter too, but they solve different problems; what stops this attack is TLS, with the Secure attribute so the browser never sends the cookie in the clear.',
+      https: 'The same request, now over HTTPS. The cookie still travels, but inside a TLS tunnel — the attacker captures ciphertext, not a session. HttpOnly and SameSite matter too, but they solve different problems; what stops this attack is TLS, with the Secure attribute so the browser never sends the cookie in the clear.'
     }
   ];
+
+  function narrationText(i) {
+    const s = STEPS[i];
+    if (!state.attacker && s.noAttacker) return s.noAttacker;
+    if (state.mode === 'https' && s.https) return s.https;
+    return s.text;
+  }
 
   // ---------- dom ----------
   const $ = (id) => document.getElementById(id);
@@ -646,7 +666,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     playing: false,
     animating: false,
     gen: 0,
-    vis: { jar: false, account: false, captured: false, replayed: false }
+    vis: { sent: false, session: false, jar: false, accountReq: false, account: false, captured: false, replayed: false, defenseReq: false }
   };
 
   let geo = { B: 0, S: 0, A: 0, y: 0, capX: 0, capTop: 0, stageW: 0, stageH: 0 };
@@ -690,12 +710,20 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     later(() => r.remove(), 850);
   }
 
+  // The settled (fully-arrived) visible state for a step. Each flag is "this panel content has a
+  // cause that has already happened". During an animated advance the causing flag is cleared at the
+  // step's start and set again only when its packet arrives, so nothing shows before its packet.
   function targetVis(step) {
+    const atk = state.attacker;
     return {
-      jar: step >= 2,
-      account: step >= 3,
-      captured: step >= 3 && state.attacker,
-      replayed: step === 4 && state.attacker && state.mode === 'http'
+      sent: step >= 1,                                   // POST /login received by the server
+      session: step >= 2,                                // session created + Set-Cookie emitted
+      jar: step >= 2,                                    // cookie stored in the browser jar
+      accountReq: step >= 3,                             // GET /account received by the server
+      account: step >= 3,                                // account page rendered in the browser
+      captured: step >= 3 && atk,                        // attacker has something in the capture
+      replayed: step === 4 && atk && state.mode === 'http', // replay result visible
+      defenseReq: step >= 5                              // the step-6 request received
     };
   }
 
@@ -761,7 +789,15 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     </header>`;
   }
 
-  function loginHTML(busy) {
+  // phase: 'idle' (step 1), 'busy' (the POST is in flight), 'sent' (it has landed: offer the next step)
+  function loginHTML(phase) {
+    const busy = phase === 'busy';
+    const sent = phase === 'sent';
+    const btnClass = busy ? 'busy' : sent ? 'sent invite' : 'invite';
+    const btnText = busy ? '<span class="mini-spin"></span>Signing in…' : sent ? 'Continue → server reply' : 'Sign in';
+    const tiny = busy ? 'Login sent · waiting for the server'
+      : sent ? 'Login sent · press Continue (or →) to see the reply'
+      : 'Demo account · click Sign in to begin';
     return `<div class="shop">
       ${shopHeader('shop')}
       <div class="shop-hero">
@@ -782,8 +818,8 @@ body.expanding .wires,body.expanding .packet{opacity:0}
           <div class="field">alice@example.test</div>
           <label class="field-label">Password</label>
           <div class="field">••••••••</div>
-          <button type="button" class="login-btn ${busy ? 'busy' : ''} ${(!busy && state.step === 0) ? 'invite' : ''}" data-action="signin">${busy ? '<span class="mini-spin"></span>Signing in…' : 'Sign in'}</button>
-          <p class="tiny">Demo account · ${state.step === 0 ? 'click Sign in to begin' : 'credentials are fake'}</p>
+          <button type="button" class="login-btn ${btnClass}" data-action="signin">${btnText}</button>
+          <p class="tiny">${tiny}</p>
         </div>
       </div>
       ${newStrip('New arrivals')}
@@ -826,19 +862,25 @@ body.expanding .wires,body.expanding .packet{opacity:0}
           <div class="spinner"></div>
           <h3>Signing you in…</h3>
           <p class="signin-sub">${copy}</p>
-          ${ready ? `<button type="button" class="continue-btn" data-action="continue">Continue to /account →</button>` : ''}
+          ${ready ? `<button type="button" class="continue-btn invite" data-action="continue">Continue to /account →</button>` : ''}
         </div>
       </div>
     </div>`;
   }
 
   function renderBrowser() {
+    // Re-rendering replaces the focused button; keyboard users get focus back on the new one.
+    const hadFocus = browserPage.contains(document.activeElement);
     if (state.vis.account) {
       browserPage.innerHTML = accountHTML();
     } else if (state.step >= 2) {
       browserPage.innerHTML = signinHTML();
     } else {
-      browserPage.innerHTML = loginHTML(state.step === 1);
+      browserPage.innerHTML = loginHTML(state.step === 0 ? 'idle' : state.vis.sent ? 'sent' : 'busy');
+    }
+    if (hadFocus) {
+      const b = browserPage.querySelector('[data-action]');
+      if (b) { try { b.focus({ preventScroll: true }); } catch (_) {} }
     }
     jarBody.innerHTML = state.vis.jar
       ? `<div class="jar-row" title="Cookie: ${COOKIE_LABEL}">
@@ -846,7 +888,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
            <span class="jar-value">${COOKIE}</span>
            <span class="jar-flag">Path=/</span>
          </div>
-         <div class="jar-attrs"><span>HttpOnly <b class="no">✗</b></span><span>Secure <b class="no">✗</b></span><span>SameSite <b class="no">—</b></span></div>`
+         <div class="jar-attrs"><span>HttpOnly <b class="no">✗</b></span><span>Secure <b class="no">✗</b></span><span>SameSite <b class="no">—</b></span><span>Expires <b class="no">—</b> (session cookie)</span></div>`
       : `<span class="jar-empty">No cookies for shop.local</span>`;
   }
 
@@ -863,38 +905,43 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   }
 
   function renderServer() {
+    const v = state.vis;
     const s = state.step;
     const tls = state.mode === 'https';
     let h = '';
-    if (s < 1) {
+    // Each line is gated on a vis flag, not on the step number, so a log entry never appears before
+    // the packet that caused it has crossed the wire.
+    if (!v.sent) {
       h = `<div class="srv-empty">waiting for traffic…</div>`;
     } else {
       h += logEntry('login', '12:04:01', 'POST', '/login', '200', 'email=alice@example.test · form-encoded', 'post');
-      if (s >= 2) {
-        h += logEntry('setcookie', '12:04:01', 'SET-COOKIE', COOKIE_LABEL, '', 'issued to alice · expires in 30m', 'set');
+      if (v.session) {
+        h += logEntry('setcookie', '12:04:01', 'SET-COOKIE', COOKIE_LABEL, '', 'issued to alice · server-side session expires in 30m', 'set');
       }
-      if (s >= 3) {
-        h += logEntry('req', '12:04:03', tls ? 'TLS' : 'GET', '/account', '200',
-          tls ? `tls 1.3 · cookie <span class="ok">${COOKIE_LABEL} → alice</span>`
+      if (v.accountReq) {
+        // The server sees a plain GET after TLS termination; the purple badge marks the encrypted connection.
+        h += logEntry('req', '12:04:03', 'GET', '/account', '200',
+          tls ? `from 172.28.0.20 · over tls 1.3 · cookie <span class="ok">${COOKIE_LABEL} → alice</span>`
               : `from 172.28.0.20 · cookie <span class="ok">${COOKIE_LABEL} → alice</span>`,
           tls ? 'tls' : 'get');
       }
-      if (s >= 4 && state.mode === 'http' && state.attacker && (s > 4 || state.vis.replayed)) {
+      // The replay line persists once shown (step > 4); at step 4 it waits for the replay to land.
+      if (state.mode === 'http' && state.attacker && (s > 4 || v.replayed)) {
         h += logEntry('replay', '12:04:05', 'GET', '/account', '200',
           `from <span class="hi">172.28.0.30</span> · cookie <span class="hi">${COOKIE_LABEL} → alice</span>`,
           'get');
       }
-      if (s >= 5) {
-        h += logEntry('defense', '12:04:07', tls ? 'TLS' : 'GET', '/account', '200',
-          tls ? `tls 1.3 · cookie <span class="ok">${COOKIE_LABEL} → alice</span>`
-              : `cleartext · cookie <span class="hi">${COOKIE_LABEL} → alice</span>`,
+      if (v.defenseReq) {
+        h += logEntry('defense', '12:04:07', 'GET', '/account', '200',
+          tls ? `from 172.28.0.20 · over tls 1.3 · cookie <span class="ok">${COOKIE_LABEL} → alice</span>`
+              : `from 172.28.0.20 · cleartext · cookie <span class="hi">${COOKIE_LABEL} → alice</span>`,
           tls ? 'tls' : 'get');
       }
     }
     serverLog.innerHTML = h;
     serverLog.scrollTop = serverLog.scrollHeight;
 
-    sessionRows.innerHTML = s >= 2
+    sessionRows.innerHTML = v.session
       ? `<div class="sess-row" data-key="session"><code>${COOKIE}</code><span class="sess-user">alice</span><span class="sess-meta">issued 12:04:01 · expires 12:34 · last used 12:04</span></div>`
       : `<div class="sess-empty">no active sessions</div>`;
   }
@@ -913,17 +960,25 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     const capTime = s >= 5 ? '12:04:07' : '12:04:03';
     let h = '';
 
+    // The login itself passes the tap too: over plain HTTP the password is readable, over TLS only
+    // the record header is (type 0x17 application_data, version 0x0303, 2-byte length).
+    const loginCap = !state.vis.sent ? '' : tls
+      ? `<div class="cap-line"><span class="ts">12:04:01</span> TLS 1.3 application_data · <span class="lbl">233 bytes</span> · <span class="cipher">17 03 03 00 e9 …</span> (login, encrypted)</div>`
+      : `<div class="cap-line"><span class="ts">12:04:01</span> POST /login HTTP/1.1 · Host: shop.local</div>
+        <div class="cap-line"><span class="lbl">body:</span> email=alice@example.test&amp;password=springtime42 <span class="warn">— cleartext, password included</span></div>`;
+
     if (s < 3) {
-      h = `<div class="cap-empty">Listening on eth0…<br>Waiting for traffic to shop.local.</div>`;
+      h = loginCap || `<div class="cap-empty">Listening on eth0…<br>Waiting for traffic to shop.local.</div>`;
     } else if (!state.vis.captured) {
-      h = `<div class="cap-empty">Listening on eth0…<br>Waiting for the next request.</div>`;
+      h = loginCap + `<div class="cap-empty">Listening on eth0…<br>Waiting for the next request.</div>`;
     } else if (tls) {
-      h = `<div class="cap-line"><span class="ts">${capTime}</span> TLS 1.3 application_data</div>
+      h = loginCap + `<div class="cap-line"><span class="ts">${capTime}</span> TLS 1.3 application_data</div>
         <div class="cap-line"><span class="lbl">412 bytes</span> · no readable headers</div>
-        <div class="cap-line"><span class="cipher">17 03 03 04 9a 2c … d1 8f</span></div>
-        <div class="cap-line"><span class="warn">encrypted — the session ID is not visible</span></div>`;
+        <div class="cap-line"><span class="cipher">17 03 03 01 9c 2c … d1 8f</span></div>
+        <div class="cap-line"><span class="warn">encrypted — the session ID is not visible</span></div>
+        <div class="cap-line">still visible: 172.28.0.20 → 172.28.0.10:443 · server name shop.local (SNI) · sizes and timing</div>`;
     } else {
-      h = `<div class="cap-line"><span class="ts">${capTime}</span> GET /account HTTP/1.1</div>
+      h = loginCap + `<div class="cap-line"><span class="ts">${capTime}</span> GET /account HTTP/1.1</div>
         <div class="cap-line">Host: shop.local</div>
         <div class="cap-line"><span class="lbl">Cookie:</span> <span class="cap-cookie">${COOKIE_LABEL}</span></div>
         <div class="cap-line"><span class="warn">copied — original request passed through</span></div>`;
@@ -997,7 +1052,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     $('stepCount').textContent = `Step ${state.step + 1} of ${STEPS.length}`;
     $('stepTag').textContent = s.tag;
     $('stepTitle').textContent = s.title;
-    $('stepText').textContent = s.text;
+    $('stepText').textContent = narrationText(state.step);
     narrator.classList.remove('swap');
     void narrator.offsetWidth;
     narrator.classList.add('swap');
@@ -1007,6 +1062,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     [...dots.children].forEach((b, i) => {
       b.classList.toggle('on', i === state.step);
       b.classList.toggle('past', i < state.step);
+      if (i === state.step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
     });
   }
 
@@ -1128,9 +1184,35 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     }
   }
 
+  // Resolves when the animation finishes, or when a grace timer runs out, whichever is first.
+  // `finished` never settles while the tab is hidden, and older Safari has no `finished` at all,
+  // so no step may wait on it alone.
+  const GRACE_MS = 1200;
+  function settled(anim, ms) {
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; clearTimeout(timer); resolve(); } };
+      const timer = setTimeout(finish, ms + GRACE_MS);
+      if (anim.finished && typeof anim.finished.then === 'function') {
+        anim.finished.then(finish, finish);
+      } else {
+        anim.onfinish = finish;
+        anim.oncancel = finish;
+      }
+    });
+  }
+
+  const finitePt = (p) => !p || (Number.isFinite(p.x) && Number.isFinite(p.y));
+
   // Packets pop in as they leave, travel with an ease, and sink into the card they reach.
   // Optional via waypoint lets a packet leave the attacker/capture and join the wire.
   function move(el, from, to, ms, { pulse = null, via = null, ripple = null } = {}) {
+    // Nothing sensible to draw (no measured geometry, hidden tab, no Web Animations): skip the
+    // flight after a short beat so the step still completes.
+    if (!geo.stageW || !finitePt(from) || !finitePt(to) || !finitePt(via) || document.hidden || typeof el.animate !== 'function') {
+      el.style.opacity = '0';
+      return new Promise((resolve) => later(resolve, dur(Math.min(ms, 300))));
+    }
     el.style.transform = `translate(${from.x}px,${from.y}px)`;
     const at = (p) => `translate(${p.x}px,${p.y}px)`;
     const lerp = (f) => ({ x: from.x + (to.x - from.x) * f, y: from.y + (to.y - from.y) * f });
@@ -1150,12 +1232,10 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     const a = el.animate(frames, { duration: dur(ms), fill: 'forwards' });
     activeAnims.add(a);
     if (pulse) wirePulse(from.x + el.offsetWidth / 2, to.x + el.offsetWidth / 2, ms, pulse);
-    return a.finished
-      .catch(() => {})
-      .then(() => {
-        activeAnims.delete(a);
-        if (ripple) rippleAt(to.x + el.offsetWidth / 2, to.y + el.offsetHeight / 2, ripple);
-      });
+    return settled(a, dur(ms)).then(() => {
+      activeAnims.delete(a);
+      if (ripple) rippleAt(to.x + el.offsetWidth / 2, to.y + el.offsetHeight / 2, ripple);
+    });
   }
 
   function requestHTML(tls) {
@@ -1205,17 +1285,31 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   async function animateLogin(gen) {
     const el = makePacket(`<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
       <div class="pkt-row sub">alice@example.test · ••••••</div>`, 'req');
-    await move(el, pktPos('browser', el), pktPos('server', el), 1050, { pulse: '#8fc0ff', ripple: '#8fc0ff' });
+    await move(el, pktPos('browser', el), pktPos('server', el), 1300, { pulse: '#8fc0ff', ripple: '#8fc0ff' });
     el.remove();
     if (gen !== state.gen) return;
+    // Only now the POST has arrived: the server logs it, the attacker's capture shows it, and the
+    // browser stops the spinner and offers the next step. (Before, the server line showed on entry.)
+    state.vis.sent = true;
+    renderServer();
+    renderBrowser();
+    renderCapture();
     flashEl(serverLog.querySelector('[data-key="login"]'));
+    flashEl(capLog.lastElementChild);
   }
 
   async function animateSetCookie(gen) {
     state.vis.jar = false;
     renderBrowser();
+    // The server creates the session and emits Set-Cookie: the store row and the Set-Cookie log line
+    // appear as the response packet leaves the server, not when the step opens.
+    state.vis.session = true;
+    renderServer();
+    flashEl(serverLog.querySelector('[data-key="setcookie"]'));
+    flashEl(sessionRows.querySelector('.sess-row'));
+
     const el = makePacket(setCookieHTML(), 'res');
-    await move(el, pktPos('server', el), pktPos('browser', el), 1150, { pulse: '#6fe8b8', ripple: '#6fe8b8' });
+    await move(el, pktPos('server', el), pktPos('browser', el), 1300, { pulse: '#6fe8b8', ripple: '#6fe8b8' });
     el.remove();
     if (gen !== state.gen) return;
 
@@ -1226,17 +1320,19 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     chip.remove();
     if (gen !== state.gen) return;
 
+    // Only after the cookie drops into the jar does the jar fill.
     state.vis.jar = true;
     renderBrowser();
     flashEl(jarBody.querySelector('.jar-row'));
-    flashEl(serverLog.querySelector('[data-key="setcookie"]'));
   }
 
   async function animateRequest(gen, opts = {}) {
-    const revealAccount = opts.revealAccount !== false;
+    const revealAccount = opts.revealAccount !== false;   // step 4 reveals the account; step 6 does not
     const tls = state.mode === 'https';
+    // Clear whatever this packet is about to cause, so nothing shows before the packet lands.
     state.vis.captured = false;
-    if (revealAccount) state.vis.account = false;
+    if (revealAccount) { state.vis.account = false; state.vis.accountReq = false; }
+    else state.vis.defenseReq = false;
     renderAll();
     measureGeo();
 
@@ -1250,15 +1346,26 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     el.remove();
     if (gen !== state.gen) return;
 
-    if (revealAccount) state.vis.account = true;
+    // Only now the request has reached the server: log the request and render the reply.
+    if (revealAccount) { state.vis.account = true; state.vis.accountReq = true; }
+    else state.vis.defenseReq = true;
+    // The final state never depends on the secondary (stolen-copy) animation having run.
+    if (state.attacker) state.vis.captured = true;
     renderAll();
-    flashEl(serverLog.querySelector('[data-key="req"]'));
+    flashEl(serverLog.querySelector(revealAccount ? '[data-key="req"]' : '[data-key="defense"]'));
     if (revealAccount) flashEl(browserPage.querySelector('.credit'));
-    if (state.step === 5) flashEl(serverLog.querySelector('[data-key="defense"]'));
   }
 
   async function animateReplay(gen) {
     if (!state.attacker || state.mode !== 'http') return;
+    if (!animationsEnabled()) {
+      // Stacked layout: no wire geometry to fly along; show the result directly.
+      state.vis.replayed = true;
+      renderCapture();
+      renderServer();
+      flashEl(capResult);
+      return;
+    }
     state.vis.replayed = false;
     renderAll();
     measureGeo();
@@ -1289,6 +1396,13 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     if (!animationsEnabled()) {
       state.vis = targetVis(i);
       if (i === 5) state.vis.captured = state.attacker;
+      if (i === 1) {
+        // No packet to watch here, so give the "Signing in…" a short beat before offering Continue.
+        state.vis.sent = false;
+        renderAll();
+        later(() => { if (gen === state.gen) { state.vis.sent = true; renderBrowser(); renderCapture(); } }, 600);
+        return;
+      }
       renderAll();
       measureGeo();
       return;
@@ -1305,13 +1419,18 @@ body.expanding .wires,body.expanding .packet{opacity:0}
       } else if (i === 4) {
         await animateReplay(gen);
       } else if (i === 5) {
-        if (state.mode === 'https') {
-          await animateRequest(gen, { revealAccount: false });
-        } else {
-          state.vis.captured = state.attacker;
-          state.vis.replayed = false;
-          renderAll();
-        }
+        // The defense step re-runs the same request over the wire (cleartext now, ciphertext after
+        // the flip to HTTPS), so the capture and the server line follow a visible packet.
+        await animateRequest(gen, { revealAccount: false });
+      }
+    } catch (err) {
+      // An animation that throws must never leave a spinner on screen: jump to the step's end state.
+      console.warn('Cookie Theft: animation failed, showing the final state instead.', err);
+      if (gen === state.gen) {
+        cancelAnims();
+        state.vis = targetVis(i);
+        if (i === 5) state.vis.captured = state.attacker;
+        renderAll();
       }
     } finally {
       if (gen === state.gen) state.animating = false;
@@ -1328,13 +1447,12 @@ body.expanding .wires,body.expanding .packet{opacity:0}
 
     state.vis = targetVis(next);
     if (animate) {
-      if (next === 2) state.vis.jar = false;
-      if (next === 3) { state.vis.account = false; state.vis.captured = false; }
+      // Clear the flags this step's packets are about to set, so each panel waits for its packet.
+      if (next === 1) state.vis.sent = false;
+      if (next === 2) { state.vis.session = false; state.vis.jar = false; }
+      if (next === 3) { state.vis.account = false; state.vis.accountReq = false; state.vis.captured = false; }
       if (next === 4) state.vis.replayed = false;
-      if (next === 5) {
-        state.vis.replayed = false;
-        state.vis.captured = state.mode === 'http' ? state.attacker : false;
-      }
+      if (next === 5) { state.vis.defenseReq = false; state.vis.captured = false; state.vis.replayed = false; }
     }
 
     updateNarrator();
@@ -1354,14 +1472,18 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     cancelAnims();
 
     if (state.step === 5) {
+      // Flipping the connection re-runs the defense request so the new capture (cleartext or
+      // ciphertext) arrives behind a visible packet, in both directions.
       state.vis.replayed = false;
       state.vis.captured = false;
+      state.vis.defenseReq = false;
       renderAll();
       measureGeo();
-      if (mode === 'https') {
+      if (animationsEnabled()) {
         runStepAnimation(5);
       } else {
         state.vis.captured = state.attacker;
+        state.vis.defenseReq = true;
         renderAll();
         flashEl(capLog.lastElementChild);
       }
@@ -1371,6 +1493,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
       measureGeo();
     }
     updateDefensePrompt();
+    updateNarrator();
   }
 
   function setAttacker(on) {
@@ -1382,6 +1505,7 @@ body.expanding .wires,body.expanding .packet{opacity:0}
     if (state.step === 5) state.vis.captured = on;
     renderAll();
     measureGeo();
+    updateNarrator();
   }
 
   function stopPlay() {
@@ -1488,6 +1612,11 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   document.addEventListener('keydown', (e) => {
     if (document.body.classList.contains('expanding')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // A keyboard user who has tabbed to a control gets its native Space behaviour (click / toggle);
+    // the global play shortcut applies when nothing has visible focus.
+    if (e.key === ' ' && e.target instanceof Element && e.target.matches('button, input, a, [role="button"]')) {
+      try { if (e.target.matches(':focus-visible')) return; } catch (_) {}
+    }
     switch (e.key) {
       case 'ArrowRight':
       case 'PageDown':
@@ -1594,6 +1723,11 @@ body.expanding .wires,body.expanding .packet{opacity:0}
   ro.observe(attackerNode);
   ro.observe(capLog);
   window.addEventListener('resize', () => requestAnimationFrame(measureGeo));
+  // Coming back to the tab: re-measure (the window may have changed) and redraw any state an
+  // animation skipped while hidden.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) requestAnimationFrame(() => { measureGeo(); if (!state.animating) renderAll(); });
+  });
 
   setStep(startStep, { animate: false });
   requestAnimationFrame(() => { measureGeo(); });
