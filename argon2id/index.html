@@ -1,0 +1,1773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="Cache-Control" content="no-store"/>
+<title>Password Check · Argon2id</title>
+<style>
+:root{
+  --bg:#070a0f;
+  --line:rgba(148,163,184,.14);
+  --text:#e6edf6;
+  --muted:#8a9bb1;
+  --dim:#5a6b80;
+  --blue:#5ea0ff;
+  --green:#37d399;
+  --amber:#f5b34a;
+  --red:#ff6b6b;
+  --purple:#b48cff;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;
+  --serif:Georgia,"Iowan Old Style","Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--text);font-family:var(--sans);overflow:hidden;
+  background:
+    radial-gradient(1000px 700px at 6% -10%,rgba(84,166,230,.55),transparent 60%),
+    radial-gradient(950px 650px at 100% -4%,rgba(158,120,225,.40),transparent 58%),
+    radial-gradient(900px 620px at 50% 118%,rgba(60,195,150,.28),transparent 62%),
+    radial-gradient(1100px 720px at 50% 52%,rgba(150,190,230,.22),transparent 72%),
+    radial-gradient(700px 500px at 8% 82%,rgba(225,170,110,.14),transparent 70%),
+    linear-gradient(155deg,#2a405a 0%,#223448 38%,#1a2a3a 68%,#15222e 100%);
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(148,163,184,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(148,163,184,.04) 1px,transparent 1px);
+  background-size:46px 46px;
+  mask-image:radial-gradient(ellipse 75% 70% at 50% 38%,#000 5%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 75% 70% at 50% 38%,#000 5%,transparent 78%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(1200px 800px at 50% 42%,transparent 45%,rgba(2,5,9,.14) 100%);
+}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{cursor:default;opacity:.4}
+button:focus-visible{outline:2px solid #7cc7ff;outline-offset:2px}
+svg{display:block}
+code{font-family:var(--mono)}
+
+.app{position:relative;z-index:1;height:100vh;height:100dvh;max-width:1920px;margin:0 auto;padding:15px 22px 9px;display:flex;flex-direction:column;gap:9px}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:16px;flex:none}
+.brand{display:flex;align-items:center;gap:11px;min-width:250px}
+.brand-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#2f6b58,#143027);border:1px solid rgba(93,220,170,.5);box-shadow:0 0 26px -8px rgba(55,211,153,.55)}
+.brand-text{display:flex;flex-direction:column;line-height:1.15}
+.brand-text strong{font-size:15px;font-weight:650;letter-spacing:.005em}
+.brand-text span{font-size:11.5px;color:var(--muted)}
+.dots{display:flex;gap:6px;margin:0 auto}
+.dots button{width:22px;height:6px;border-radius:999px;background:#1d2836;transition:width .2s,background .2s}
+.dots button:hover{background:#2c3d51}
+.dots button.past{background:#2e4258}
+.dots button.on{width:38px;background:var(--green);box-shadow:0 0 12px rgba(55,211,153,.5)}
+.controls{display:flex;align-items:center;gap:7px}
+.btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:9px;background:#131c27;border:1px solid rgba(148,163,184,.18);font-size:12.5px;color:#cfdbea;transition:.15s}
+.btn:hover:not(:disabled){background:#182435;border-color:rgba(148,163,184,.32)}
+.btn.primary{background:linear-gradient(180deg,#173a2d,#0f2a22);border-color:rgba(55,211,153,.35);color:#c9ffe9}
+.btn.primary:hover:not(:disabled){background:linear-gradient(180deg,#1b4636,#113229)}
+.btn.ghost{background:transparent}
+.btn .ico{font-size:10px;opacity:.8}
+
+/* narration */
+.narrator{padding:1px 2px 0;flex:none}
+.step-meta{display:flex;align-items:center;gap:8px;font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+.step-meta .sep{color:#33465c}
+.step-meta #stepTag{color:var(--muted);letter-spacing:.08em}
+.narrator h1{margin:7px 0 4px;font-size:clamp(21px,2.05vw,30px);font-weight:650;letter-spacing:-.015em}
+.narrator p{margin:0;max-width:1180px;color:#a8b7c9;font-size:clamp(13px,1.1vw,15.5px);line-height:1.5}
+.narrator.swap .step-meta,.narrator.swap h1,.narrator.swap p{animation:rise .32s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* server config controls */
+.seg{display:flex;gap:2px;padding:3px;background:#0d141d;border:1px solid var(--line);border-radius:9px}
+.seg button{height:26px;padding:0 9px;border-radius:6px;font:600 10.5px var(--mono);color:var(--muted);transition:.15s}
+.seg button:hover{color:#cfe0f3}
+.seg button.on{background:#182535;color:#a7ffd8;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.eng-head .seg{margin-left:auto;padding:2px;border-radius:7px;flex:none}
+.eng-head .seg button{height:23px;padding:0 6px;font-size:9.5px}
+.eng-head .seg button.on{background:rgba(55,211,153,.16);color:#c9ffe9;box-shadow:inset 0 0 0 1px rgba(55,211,153,.3)}
+.server-config{flex:none;display:flex;flex-direction:column;gap:5px;padding:8px 11px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.18)}
+.cfg-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cfg-label{font:600 8.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#7fe2bd;white-space:nowrap}
+.cfg-note{font:8px/1.4 var(--mono);color:#5f7187}
+.server-config .seg{padding:2px;border-radius:7px}
+.server-config .seg button{height:23px;padding:0 6px;font-size:9.5px}
+.server-config .seg button.on{background:rgba(55,211,153,.16);color:#c9ffe9;box-shadow:inset 0 0 0 1px rgba(55,211,153,.3)}
+
+/* stage */
+.stage{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,26vw,380px) clamp(470px,34vw,540px);gap:20px}
+.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.wire-flow{animation:flow 3.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-28}}
+
+.card{position:relative;z-index:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-radius:15px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012) 40%),#0b1118;box-shadow:0 22px 60px -30px #000,inset 0 1px 0 rgba(255,255,255,.04)}
+.card::before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(94,160,255,.5),transparent);opacity:.65}
+.browser::before{display:none}
+.server::before{background:linear-gradient(90deg,transparent,rgba(55,211,153,.5),transparent)}
+.engine::before{background:linear-gradient(90deg,transparent,rgba(180,140,255,.55),transparent)}
+
+.chrome{display:flex;align-items:center;gap:10px;padding:9px 11px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.018);flex:none}
+.srv-glyph{width:20px;height:20px;flex:none;color:#48d6a2;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(55,211,153,.35))}
+.srv-glyph circle{fill:currentColor;stroke:none}
+.srv-name{font:600 12px var(--mono);color:#d7f7ea}
+.srv-local{font:600 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#6fd6ae;border:1px solid rgba(55,211,153,.25);background:rgba(55,211,153,.08);border-radius:4px;padding:2px 4px}
+.srv-meta{margin-left:auto;font:10.5px var(--mono);color:var(--dim)}
+
+/* browser chrome — light, like Chrome */
+.tabstrip{display:flex;align-items:center;gap:5px;height:30px;padding:4px 7px 0;background:#dee1e6;flex:none}
+.tab{display:flex;align-items:center;gap:7px;height:26px;padding:0 10px;border-radius:8px 8px 0 0;background:#fff;color:#202124;font:500 10.5px var(--sans);max-width:240px;box-shadow:0 1px 3px rgba(60,64,67,.12)}
+.tab-fav{width:13px;height:13px;flex:none;border-radius:3px;background:linear-gradient(135deg,#2f5d50,#7da184);display:grid;place-items:center;font:700 7px var(--sans);color:#fff}
+.tab-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab-close{opacity:.6;font-size:12px;line-height:1;margin-left:2px;color:#5f6368}
+.newtab{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;color:#5f6368;font-size:15px;margin-bottom:2px}
+.newtab:hover{background:rgba(60,64,67,.08)}
+.win-controls{margin-left:auto;display:flex;align-items:center;gap:2px;margin-bottom:2px}
+.win-controls span{width:20px;height:18px;display:grid;place-items:center;color:#5f6368;font-size:10px;border-radius:4px}
+.win-controls span:last-child:hover{background:#fce8e6;color:#d93025}
+.browser-toolbar{display:flex;align-items:center;gap:6px;height:40px;padding:0 10px;background:#fff;border-bottom:1px solid #dadce0;flex:none}
+.nav-btn{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;color:#5f6368}
+.nav-btn:hover{background:#f1f3f4}
+.urlbar{flex:1;min-width:0;height:29px;display:flex;align-items:center;gap:6px;padding:0 10px;border-radius:15px;background:#f1f3f4;border:1px solid #f1f3f4;font:11px var(--mono);color:#202124}
+.urlbar:hover{border-color:#dadce0;background:#fff}
+.url-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#202124}
+.url-sep{width:1px;height:13px;background:#c4c7c5;flex:none}
+.urlbar .badge{margin-left:0}
+.locksm{flex:none;color:#137333}
+.badge{padding:2px 5px;border-radius:4px;font:600 8.5px var(--mono);letter-spacing:.04em;white-space:nowrap}
+.badge.secure{color:#137333;background:#e6f4ea;border:1px solid #b7e1c1}
+.toolbar-right{display:flex;align-items:center;gap:4px;flex:none}
+.tool-ico{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#5f6368}
+.tool-ico:hover{background:#f1f3f4}
+.avatar{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;font:700 10px var(--sans);color:#f6f1e8;background:#2f5d50;border:1px solid #24493f}
+
+/* light shop inside the browser */
+.browser-body{flex:1;min-height:0;overflow:auto;background:#f6f1e8;container-type:inline-size;display:flex;flex-direction:column}
+.page{flex:1 0 auto;display:flex;flex-direction:column;background:#f6f1e8;color:#2b2822}
+.shop{flex:1 0 auto;display:flex;flex-direction:column;background:#f6f1e8;color:#2b2822;font-family:var(--sans)}
+.shop-head{display:flex;align-items:center;gap:14px;padding:9px 15px;background:#fffdf8;border-bottom:1px solid #e6dccb;flex:none;font-size:10px}
+.shop-logo{display:flex;align-items:center;gap:7px;font-family:var(--serif);font-size:14px;font-weight:700;letter-spacing:-.01em;color:#243f36;white-space:nowrap}
+.shop-mark{width:18px;height:18px;border-radius:50%;background:#2f5d50;color:#f6f1e8;display:grid;place-items:center;font:700 7px var(--sans);letter-spacing:.02em;flex:none}
+.shop-nav{display:flex;gap:12px;color:#7b7265;white-space:nowrap}
+.shop-nav .on{color:#243f36;font-weight:650;border-bottom:1px solid #2f5d50;padding-bottom:1px}
+.shop-actions{margin-left:auto;display:flex;align-items:center;gap:10px;color:#7b7265;white-space:nowrap}
+.shop-actions .bag{color:#243f36;font-weight:650}
+.shop-foot{margin-top:auto;display:flex;justify-content:space-between;gap:14px;padding:9px 16px;background:#fffdf8;border-top:1px solid #e6dccb;font-size:8.5px;color:#9a8d7a}
+.eyebrow{display:block;margin-bottom:5px;font:650 8px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:#9a8d7a}
+.auth-page{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:radial-gradient(520px 300px at 50% 0%,#fffdf8,transparent 75%)}
+.auth-card{width:min(310px,94%);background:#fffdf8;border:1px solid #e6dccb;border-radius:13px;padding:17px;box-shadow:0 20px 40px -30px rgba(60,45,25,.55);text-align:left}
+.auth-card.status-card{text-align:center;display:flex;flex-direction:column;align-items:center}
+.auth-card h3{margin:2px 0 4px;font-family:var(--serif);font-weight:500;font-size:21px;letter-spacing:-.01em;color:#243f36}
+.auth-sub{margin:0 0 11px;font-size:10px;line-height:1.5;color:#8a8174}
+.field-label{display:block;margin:9px 0 4px;font:650 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#9a8d7a}
+.vis-tag{display:inline-block;margin-left:5px;padding:1px 4px;border-radius:4px;font:600 7px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#2f5d50;background:#edf3ee;border:1px solid #cfe0d8;vertical-align:middle}
+.field{min-height:29px;display:flex;align-items:center;padding:0 9px;border-radius:6px;background:#fbf8f2;border:1px solid #e4dbcb;font:10.5px var(--mono);color:#4a443a;word-break:break-word}
+.field.pw{color:#243f36;font-weight:600;line-height:1.35;padding-top:5px;padding-bottom:5px}
+.field.pw.bad{color:#a33a2f;background:#fdf0ed;border-color:#e9bdb5}
+.auth-btn{margin-top:12px;width:100%;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;font-weight:650;color:#f6f1e8;background:#2f5d50;cursor:pointer;transition:background .15s,transform .1s}
+.auth-btn:hover{background:#386c5d}
+.auth-btn:active{transform:translateY(1px)}
+.auth-btn.ghost{background:#edf3ee;color:#2f5d50;border:1px solid #cfe0d8}
+.auth-btn.ghost:hover{background:#e2ece4}
+.auth-tiny{margin:8px 0 0;text-align:center;font-size:8px;color:#a59a8a}
+.spinner{width:22px;height:22px;border-radius:50%;border:2px solid rgba(47,93,80,.18);border-top-color:#2f5d50;animation:spin .8s linear infinite}
+.spinner.sm{width:12px;height:12px;border-width:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.auth-icon{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;margin-bottom:9px}
+.auth-icon.ok{background:#e6f4ea;color:#137333}
+.auth-icon.bad{background:#fce8e6;color:#c5221f}
+.auth-chip{display:inline-flex;align-items:center;gap:5px;margin-top:3px;padding:3px 7px;border-radius:5px;font:600 8.5px var(--mono);color:#137333;background:#e6f4ea;border:1px solid #b7e1c1}
+.auth-attempt{width:100%;margin-top:9px;padding:6px 8px;border-radius:6px;background:#f7f2e9;border:1px solid #e8dfd0;font:9px/1.5 var(--mono);color:#6f675b;word-break:break-all;text-align:left}
+.auth-attempt b{color:#a33a2f;font-weight:600}
+.auth-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:10px}
+.auth-stats span{font:600 8px var(--mono);color:#2f5d50;background:#edf3ee;border:1px solid #d6e4dc;border-radius:4px;padding:3px 5px}
+.auth-card .auth-btn{margin-top:12px}
+.auth-card .auth-tiny{display:block}
+
+/* mid: the Argon2id engine */
+.mid{position:relative;z-index:1;min-height:0;display:flex;flex-direction:column;padding-top:110px}
+.engine{flex:1;min-height:0;display:flex;flex-direction:column}
+.eng-head{flex:none;display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.018)}
+.eng-glyph{width:19px;height:19px;flex:none;color:#c1a5ff;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(180,140,255,.4))}
+.eng-glyph circle{fill:currentColor;stroke:none}
+.eng-title{display:flex;flex-direction:column;gap:2px;font:700 10.5px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:#e2d7ff}
+.eng-title span{font:500 9px var(--mono);letter-spacing:.02em;text-transform:none;color:#7d8fa5}
+.eng-badge{margin-left:auto;padding:2px 5px;border-radius:4px;border:1px solid rgba(180,140,255,.3);background:rgba(180,140,255,.08);font:600 9px var(--mono);color:#c9b6ff;white-space:nowrap}
+.eng-body{flex:1;min-height:0;overflow:auto;padding:9px;display:flex;flex-direction:column;gap:7px}
+.io-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.io{display:grid;grid-template-columns:56px minmax(0,1fr);gap:2px 7px;padding:6px 8px;border:1px solid rgba(148,163,184,.12);border-radius:8px;background:rgba(0,0,0,.16)}
+.io-k{font:600 8.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:#7d8fa5;padding-top:2px}
+.io-k .io-tag{display:block;margin-top:3px;font-size:7.5px;letter-spacing:.03em;text-transform:none;color:#5f7187}
+.io-v{font:10.5px/1.45 var(--mono);color:#d9e8f7;word-break:break-all}
+.io-v.muted{color:#4e5f73}
+.io-v.bad{color:#ff9b9b}
+.io-n{grid-column:2;font:8.5px var(--mono);color:#5f7187}
+.mem{--cell:14px;flex:1;min-height:auto;display:flex;flex-direction:column;padding:7px 9px;border:1px solid rgba(148,163,184,.12);border-radius:8px;background:rgba(0,0,0,.16);transition:border-color .2s,box-shadow .2s}
+.mem.ok{border-color:rgba(55,211,153,.42);box-shadow:0 0 22px -9px rgba(55,211,153,.55)}
+.mem.bad{border-color:rgba(255,107,107,.46);box-shadow:0 0 22px -9px rgba(255,107,107,.6)}
+.mem-head{display:flex;justify-content:space-between;gap:6px;margin-bottom:7px;font:600 8.5px var(--mono);letter-spacing:.09em;color:#7d8fa5}
+.mem-head #passLabel{color:#a7ffd8;letter-spacing:.02em;text-align:right}
+.mem-head em{font-style:normal;font-weight:500;font-size:7px;letter-spacing:.03em;text-transform:none;color:#4f6479;margin-left:3px}
+/* never shrink below the grid itself: --rows / --bgap are set per profile by buildGrid() */
+.mem-wrap{flex:1;min-height:calc(var(--rows,4) * var(--cell) + var(--bgap,0px) + 2px);display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;overflow:auto}
+.mem-bank{display:flex;align-items:center;justify-content:center;gap:4px;flex:none}
+.lanes{display:grid;gap:0;width:14px;grid-auto-rows:var(--cell);font:7px var(--mono);color:#4f6479;align-items:center;text-align:right;letter-spacing:.02em}
+.lanes span{line-height:1;padding-right:1px}
+.mem-grid{flex:none;display:grid;grid-template-columns:repeat(16,var(--cell));grid-auto-rows:var(--cell);gap:0}
+.cell{background:#121a24;border:1px solid #1f2c3a;border-radius:2px;transition:background .16s,border-color .16s,box-shadow .16s}
+.cell.on{background:#1d6b58;border-color:#2d9479}
+.cell.on.i{background:#2f5d8a;border-color:#4a86b8}
+.cell.on.p2{background:#2a9a78;border-color:#3fc094}
+.cell.on.p3{background:#37b58a;border-color:#53d6a8}
+.cell.on.p4{background:#45cf9c;border-color:#6ee8ba}
+.cell.now{border-color:#e3fff3;box-shadow:0 0 8px rgba(167,255,216,.95);animation:ignite .22s ease-out;position:relative;z-index:1}
+@keyframes ignite{from{transform:scale(1.45)}to{transform:scale(1)}}
+.cell.ref{border-color:#f5b34a;box-shadow:0 0 7px rgba(245,179,74,.75);position:relative;z-index:1}
+.mem.bad .cell.on{background:#5e2228;border-color:#a8444d}
+.mem.bad .cell.now{box-shadow:0 0 8px rgba(255,143,143,.95);border-color:#ffd0d0}
+.mem-formula{flex:none;margin-top:7px;padding:5px 7px;border-radius:5px;background:rgba(0,0,0,.22);border:1px solid rgba(148,163,184,.08);font:9px/1.4 var(--mono);color:#7d8fa5;min-height:24px;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden}
+.mem-formula b{color:#a7ffd8;font-weight:600}
+.mem-formula .r{color:#ffd79a;font-weight:600}
+.mem-formula .ph{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:#5f7187;font-size:8px}
+.mem-legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px;font:8px var(--mono);color:#6b7e93}
+.sw{display:inline-block;width:7px;height:7px;margin-right:3px;border-radius:2px;vertical-align:middle}
+.sw.i{background:#2f5d8a;border:1px solid #4a86b8}
+.sw.d{background:#37b58a;border:1px solid #53d6a8}
+.sw.r{background:transparent;border:1px solid #f5b34a;box-shadow:0 0 4px rgba(245,179,74,.6)}
+.mem-total{margin-left:auto;color:#4f6479;white-space:nowrap}
+.out{flex:none;min-height:48px;max-height:150px;overflow:auto;margin:0 10px 8px;padding:8px 9px;border:1px solid rgba(148,163,184,.12);border-radius:8px;background:rgba(0,0,0,.16);display:flex;flex-direction:column;gap:5px}
+.out-empty{display:flex;align-items:center;gap:7px;font:9.5px var(--mono);color:#6b7e93}
+.out-k{display:flex;justify-content:space-between;gap:6px;font:600 8.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:#7d8fa5}
+.out-k span{color:#a7ffd8;letter-spacing:.02em;text-align:right}
+.out-k span.bad{color:#ff9b9b}
+.taghex{padding:5px 6px;border:1px solid rgba(148,163,184,.09);border-radius:5px;background:#060c10;font:10px/1.5 var(--mono);color:#d9ffe9;word-break:break-all}
+.taghex.phc{font-size:9px;color:#8fa3b8}
+.phc-salt{color:#9ac9ff}
+.phc-tag{color:#a7ffd8}
+.out-n{font:8.5px var(--mono);color:#5f7187}
+.cmp-k{display:flex;justify-content:space-between;font:600 7.5px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:#5f7187;margin-top:1px}
+.cmp-k i{font-style:normal;color:#7d8fa5;letter-spacing:.02em;text-transform:none}
+.bytes{display:grid;grid-template-columns:repeat(32,minmax(0,1fr));gap:1px}
+.byte{height:15px;display:grid;place-items:center;border-radius:2px;font:8px var(--mono);color:#9fb3c8;background:#0f161e;border:1px solid rgba(148,163,184,.1);transition:background .12s,color .12s,border-color .12s}
+.bytes.stored .byte{color:#b8c9db}
+.byte.pend{color:#3f5063;border-color:rgba(148,163,184,.06)}
+.byte.eq{color:#d9ffe9;background:rgba(55,211,153,.22);border-color:rgba(55,211,153,.5)}
+.byte.ne{color:#ffd6d6;background:rgba(255,107,107,.22);border-color:rgba(255,107,107,.5)}
+.byte.chk{box-shadow:0 0 6px rgba(226,215,255,.9);border-color:#e2d7ff}
+.match{padding:3px 6px;border-radius:4px;font:8.5px var(--mono);transition:opacity .2s}
+.match.ok{color:#a7ffd8;background:rgba(55,211,153,.08);border:1px solid rgba(55,211,153,.2)}
+.match.bad{color:#ffb4b4;background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25)}
+.match.wait{color:#8fa3b8;background:rgba(148,163,184,.05);border:1px solid rgba(148,163,184,.12)}
+.cracker .fill{transition:width .8s cubic-bezier(.2,.7,.3,1)}
+.cracker.hot{border-color:rgba(255,107,107,.55);box-shadow:0 0 30px -10px rgba(255,107,107,.65)}
+.eng-foot{flex:none;display:flex;flex-wrap:wrap;gap:5px;padding:0 10px 8px}
+.chip{padding:3px 5px;border:1px solid var(--line);border-radius:4px;background:#0d141d;font:600 8.5px var(--mono);color:#8fa3b8;white-space:nowrap}
+.cracker{flex:none;display:flex;gap:8px;margin:0 10px 10px;padding:8px;border:1px solid rgba(255,107,107,.28);border-radius:8px;background:linear-gradient(180deg,rgba(255,107,107,.09),rgba(255,107,107,.02))}
+.cracker[hidden]{display:none}
+.crack-icon{width:28px;height:28px;flex:none;border-radius:8px;display:grid;place-items:center;background:#1a0f13;border:1px solid rgba(255,107,107,.35);color:#ff8f8f}
+.crack-icon svg{width:20px;height:20px}
+.crack-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.crack-title{display:flex;justify-content:space-between;gap:6px;font:700 8.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#ffb4b4}
+.crack-title span{font-weight:500;letter-spacing:.02em;text-transform:none;color:#9c6f76}
+.crack-line{font:8.5px/1.45 var(--mono);color:#a88a8f}
+.crack-bars{display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.cbar{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:5px;align-items:center;font:8px var(--mono);color:#9c8489}
+.cbar .track{height:4px;border-radius:99px;background:#1a212b;overflow:hidden}
+.cbar .fill{display:block;height:100%;border-radius:99px}
+.cbar.argon .fill{width:22%;background:#ff8f8f}
+.cbar.sha .fill{width:100%;background:#8fa3b8}
+.cbar em{font-style:normal;color:#c9b0b3;white-space:nowrap}
+
+/* server */
+.srv-body{flex:1;min-height:0;display:flex;flex-direction:column}
+.srv-section{display:flex;flex-direction:column;min-height:0;padding:12px 13px}
+.srv-section + .srv-section{border-top:1px solid var(--line)}
+.srv-section.logs{flex:1}
+.srv-label{display:flex;justify-content:space-between;margin-bottom:8px;font:600 9.5px var(--mono);letter-spacing:.11em;color:#7d8fa5}
+.srv-label .muted{color:var(--dim);font-weight:400;letter-spacing:.03em}
+.srv-log{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:9px;padding-right:4px}
+.srv-empty{font:11px var(--mono);color:#4e5f73}
+.log-entry{padding-left:9px;border-left:2px solid transparent}
+.log-line{display:flex;align-items:center;gap:7px;white-space:nowrap;font:11.5px/1.5 var(--mono)}
+.lt{font-size:10.5px;color:#52657b}
+.lm{padding:2px 5px;border-radius:4px;font-size:9.5px;font-weight:700;letter-spacing:.03em}
+.lm.post{color:#ffd79a;background:rgba(245,179,74,.12)}
+.lm.get{color:#a9d1ff;background:rgba(94,160,255,.12)}
+.lm.set{color:#a7ffd8;background:rgba(55,211,153,.12)}
+.lm.crypto{color:#d6c6ff;background:rgba(180,140,255,.12)}
+.lp{color:#c3d2e3;overflow:hidden;text-overflow:ellipsis}
+.ls{margin-left:auto;padding-left:6px;font-size:10.5px;color:#7fe2bd}
+.log-sub{padding-left:1px;font:10.5px/1.5 var(--mono);color:#70849b}
+.log-sub .hi{color:#ffb4b4}
+.log-sub .ok{color:#8be3c3}
+.srv-section.store{flex:none;background:rgba(0,0,0,.16);max-height:44%}
+.db-empty{font:11px var(--mono);color:#4e5f73}
+.db-row{display:flex;flex-direction:column;gap:5px;padding:8px;border:1px solid rgba(55,211,153,.18);border-radius:8px;background:rgba(55,211,153,.045)}
+.db-user{display:flex;align-items:center;justify-content:space-between;gap:8px;font:600 11px var(--mono);color:#d7f7ea}
+.db-badge{padding:2px 4px;border-radius:4px;border:1px solid rgba(55,211,153,.25);background:rgba(55,211,153,.1);font:600 8px var(--mono);letter-spacing:.05em;color:#a7ffd8}
+.db-phc{padding:6px;border:1px solid rgba(148,163,184,.1);border-radius:6px;background:#070c12;font:9px/1.5 var(--mono);color:#8fa3b8;word-break:break-all}
+.db-meta{font:9px var(--mono);color:#5f7a70}
+.db-plain{font:9px var(--mono);color:#ff9b9b}
+
+/* packets */
+.packet{position:absolute;top:0;left:0;z-index:20;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:7px 9px;border-radius:9px;font:600 10.5px/1.3 var(--mono);white-space:nowrap;pointer-events:none;will-change:transform;box-shadow:0 14px 34px -12px #000}
+.packet.tls{color:#e2d7ff;background:rgba(29,21,52,.97);border:1px solid rgba(180,140,255,.55);box-shadow:0 0 26px -8px rgba(180,140,255,.5),0 14px 34px -12px #000}
+.pkt-row{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pkt-row.sub{font-size:10px;font-weight:500;opacity:.96}
+.pkt-tag{padding:1px 4px;border-radius:3px;background:rgba(180,140,255,.2);color:#e2d7ff;font-size:8.5px;font-weight:700;letter-spacing:.06em}
+.pkt-tag.bad{background:rgba(255,107,107,.2);color:#ffd6d6}
+.packet .lock{color:#c9b6ff}
+.packet .cipher{color:#a99ad0}
+
+.footer{flex:none;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 14px;padding:0 2px;font:10px var(--mono);color:#42536a}
+.footer .r{color:#4c6079}
+.footer .keys{color:#4c6079}
+.footer b{color:#7d90a6;font-weight:500}
+
+.flash{animation:flashpulse .9s ease-out 1}
+@keyframes flashpulse{0%{box-shadow:0 0 0 0 rgba(94,160,255,.55)}100%{box-shadow:0 0 0 13px rgba(94,160,255,0)}}
+.log-entry.flash,.db-row.flash{animation:flashbg .9s ease-out 1;border-radius:4px}
+@keyframes flashbg{0%{background:rgba(94,160,255,.18)}100%{background:transparent}}
+
+@media (max-height:820px){
+  .eng-body{gap:5px;padding:8px}
+  .io{padding:6px 8px}
+  .io-n{display:none}
+  .mem{padding:6px 8px}
+  .mem{--cell:13px}
+  .mem-legend{margin-top:4px;font-size:7.5px}
+  .eng-foot{display:none}
+  .out{margin:0 8px 7px;max-height:140px}
+  .cracker{margin:0 8px 8px;padding:7px}
+}
+@media (max-width:1320px){
+  .mem{--cell:12px}
+  .mem-wrap{gap:4px}
+}
+/* short screens: keep the grid and the comparison; drop the supplementary lines */
+@media (max-height:790px) and (min-width:1261px){
+  .mid{padding-top:100px}
+  .mem{--cell:11px}
+  .mem-formula{display:none}
+  .io-k .io-tag{display:none}
+  .out{max-height:118px;gap:4px;padding:7px 9px}
+  .byte{height:13px;font-size:7.5px}
+  .crack-bars{display:none}
+  .cracker{padding:6px 8px}
+}
+
+/* server column: engine lives with the server */
+.server-col{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;min-height:0}
+.server-col .engine{flex:2.1}
+.server-col .server{flex:1}
+
+/* attacker GPU rig (center) */
+.attacker-rig{flex:1;min-height:0;display:flex;flex-direction:column;border-color:rgba(255,107,107,.22)}
+.attacker-rig::before{background:linear-gradient(90deg,transparent,rgba(255,107,107,.55),transparent)}
+.rig-head{flex:none;display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);background:rgba(255,107,107,.035)}
+.rig-icon{width:32px;height:32px;flex:none;border-radius:8px;display:grid;place-items:center;background:#1a0f13;border:1px solid rgba(255,107,107,.35);box-shadow:0 0 18px -8px rgba(255,107,107,.7)}
+.rig-icon svg{width:22px;height:22px}
+.rig-title{display:flex;flex-direction:column;gap:2px;font:700 10.5px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:#ffd6d6}
+.rig-title span{font:500 8.5px var(--mono);letter-spacing:.02em;text-transform:none;color:#a88a8f}
+.rig-badge{margin-left:auto;padding:2px 5px;border:1px solid rgba(255,107,107,.3);border-radius:4px;background:rgba(255,107,107,.08);font:600 8.5px var(--mono);color:#ffb4b4;white-space:nowrap}
+.rig-body{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:9px 10px 10px}
+.rig-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rig-stats>div{padding:6px 7px;border:1px solid rgba(255,107,107,.14);border-radius:7px;background:rgba(255,107,107,.035);display:flex;flex-direction:column;gap:2px}
+.rig-stats span{font:600 7.5px var(--mono);letter-spacing:.09em;color:#a88a8f}
+.rig-stats b{font:600 12px var(--mono);color:#ffe1e1;letter-spacing:-.01em}
+.gpu-wrap{flex:none}
+.gpu-grid{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;padding:7px;border:1px solid rgba(255,107,107,.15);border-radius:8px;background:rgba(0,0,0,.18)}
+.gpu-slot{aspect-ratio:1;border-radius:1.5px;background:#1a1215;border:1px solid #342026;transition:background .1s,border-color .1s,box-shadow .1s}
+.gpu-slot.off{opacity:.16}
+.gpu-slot.hot{background:#ff6b6b;border-color:#ffc9c9;box-shadow:0 0 5px rgba(255,107,107,.85)}
+.gpu-note{margin-top:4px;text-align:center;font:8px var(--mono);color:#9c6f76}
+.rig-scale{flex:none;padding:7px 8px;border:1px solid rgba(255,107,107,.14);border-radius:8px;background:rgba(0,0,0,.16)}
+.scale-title{display:flex;justify-content:space-between;gap:6px;margin-bottom:3px;font:700 8px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#ffb4b4}
+.scale-title span{font-weight:500;letter-spacing:.02em;text-transform:none;color:#9c6f76}
+.scale-row{display:flex;justify-content:space-between;gap:6px;padding:3px 1px;border-top:1px solid rgba(255,107,107,.09);font:9px var(--mono);color:#c9a7ac}
+.scale-row b{color:#ffe1e1;font-weight:600;text-align:right;white-space:nowrap}
+.scale-row.strong{border-top-color:rgba(255,107,107,.24);color:#ffd6d6}
+.scale-note{margin-top:4px;font:8px/1.4 var(--mono);color:#9c7a80}
+.attacker-rig .cracker{margin:0}
+.rig-run{flex:none;margin:0 10px 10px;height:31px;border-radius:8px;border:1px solid rgba(255,107,107,.35);background:rgba(255,107,107,.12);color:#ffd6d6;font:600 10.5px var(--mono)}
+.rig-run:hover{background:rgba(255,107,107,.2)}
+
+/* enlarge panels */
+.expand-btn{width:24px;height:24px;flex:none;border-radius:6px;display:grid;place-items:center;border:1px solid transparent;background:transparent;color:#8fa3b8;opacity:.75;transition:.15s;margin-left:4px}
+.expand-btn:hover{opacity:1;background:rgba(255,255,255,.08)}
+.expand-btn.light{color:#5f6368}
+.expand-btn.light:hover{background:#f1f3f4}
+.expand-backdrop{position:fixed;inset:0;z-index:90;background:rgba(4,8,14,.60);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:fadeIn .2s ease-out}
+.expand-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font:10px var(--mono);color:#a8b7c9;background:rgba(8,13,20,.72);border:1px solid var(--line);padding:6px 10px;border-radius:99px;pointer-events:none;white-space:nowrap}
+.card.expanded{position:fixed;inset:3vh 3vw;z-index:100;width:auto;height:auto;max-width:none;border-radius:18px;box-shadow:0 40px 120px -30px #000;animation:expandIn .25s ease-out}
+body.expanding{overflow:hidden}
+body.expanding .wires,body.expanding .packet{opacity:0}
+@keyframes expandIn{from{opacity:.4;transform:scale(.97)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+@media (max-width:1260px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh}
+  .dots{display:none}
+  .hint{display:none}
+  .topbar{flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;flex:none}
+  .wires{display:none}
+  .browser{min-height:460px}
+  .mid{padding-top:0}
+  .server-col{min-height:0}
+  .server-col .engine{flex:none;min-height:560px}
+  .server-col .server{flex:none;min-height:460px}
+  .attacker-rig{min-height:640px}
+  .srv-section.store{max-height:none}
+}
+@container (max-width:470px){
+  .shop-nav{display:none}
+  .auth-page{padding:12px}
+  .auth-card{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#a7ffd8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2.6"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10"/><circle cx="12" cy="15" r="1.3" fill="#a7ffd8" stroke="none"/><path d="M12 16.3V18.2"/></svg>
+      </div>
+      <div class="brand-text"><strong>Password Check</strong><span>Argon2id, inside the server</span></div>
+    </div>
+    <nav class="dots" id="dots" aria-label="Steps"></nav>
+    <div class="controls">
+      <button class="btn ghost" id="btnBack" title="Back (←)">← Back</button>
+      <button class="btn primary" id="btnPlay" title="Play / pause (space)"><span class="ico" id="playIco">▶</span><span id="playLabel">Play</span></button>
+      <button class="btn" id="btnNext" title="Next (→)">Next <span class="ico">→</span></button>
+      <button class="btn ghost" id="btnReset" title="Reset (R)">Reset</button>
+      <button class="btn ghost" id="btnFull" title="Fullscreen (F)">Present</button>
+    </div>
+  </header>
+
+  <section class="narrator" id="narrator" aria-live="polite">
+    <div class="step-meta"><span id="stepCount">Step 1 of 7</span><span class="sep">·</span><span id="stepTag">register</span></div>
+    <h1 id="stepTitle">A password arrives</h1>
+    <p id="stepText"></p>
+  </section>
+
+  <main class="stage" id="stage" aria-label="Password hashing stage">
+    <svg class="wires" id="wires" aria-hidden="true"></svg>
+
+    <section class="card browser" id="browserCard" aria-label="Victim browser">
+      <div class="tabstrip">
+        <div class="tab">
+          <span class="tab-fav">F</span>
+          <span class="tab-title">Fern &amp; Field</span>
+          <span class="tab-close" aria-hidden="true">×</span>
+        </div>
+        <span class="newtab" aria-hidden="true">+</span>
+        <div class="win-controls" aria-hidden="true"><span>—</span><span>▢</span><span>×</span></div>
+      </div>
+      <div class="browser-toolbar">
+        <span class="nav-btn" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg></span>
+        <span class="nav-btn" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg></span>
+        <span class="nav-btn" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8a5 5 0 1 1-1.46-3.54"/><path d="M13 2.8v3.2h-3.2"/></svg></span>
+        <div class="urlbar">
+          <span class="locksm" id="urlLock"></span>
+          <span class="badge secure" id="urlBadge">TLS</span>
+          <span class="url-sep"></span>
+          <span class="url-text" id="urlText">shop.local</span>
+        </div>
+        <div class="toolbar-right">
+          <span class="tool-ico" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="m8 2.2 1.7 3.5 3.8.55-2.75 2.7.65 3.8L8 11l-3.4 1.75.65-3.8L2.5 6.25l3.8-.55L8 2.2Z"/></svg></span>
+          <div class="avatar">A</div>
+          <span class="tool-ico" aria-hidden="true"><svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg></span>
+        </div>
+      </div>
+      <div class="browser-body"><div class="page" id="browserPage"></div></div>
+    </section>
+
+    <div class="mid">
+      <section class="card attacker-rig" id="attackerCard" aria-label="Attacker GPU rig">
+        <div class="rig-head">
+          <div class="rig-icon" aria-hidden="true">
+            <svg viewBox="0 0 44 44" width="22" height="22">
+              <path d="M22 5.5c-7.4 0-12 5-12 12.2 0 3.4 1.7 5.8 4.4 7.1L12 38.5h20l-2.4-13.7c2.7-1.3 4.4-3.7 4.4-7.1 0-7.2-4.6-12.2-12-12.2Z" fill="#2a1216" stroke="#ff8f8f" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M15.3 20.5c0-4.8 2.7-7.7 6.7-7.7s6.7 2.9 6.7 7.7" fill="none" stroke="#ff8f8f" stroke-width="1.1" opacity=".55"/>
+              <circle cx="18.6" cy="21.6" r="1.35" fill="#ff6b6b"/>
+              <circle cx="25.4" cy="21.6" r="1.35" fill="#ff6b6b"/>
+              <path d="M19.5 26.2c1.6.9 3.4.9 5 0" fill="none" stroke="#ff8f8f" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>
+            </svg>
+          </div>
+          <div class="rig-title">ATTACKER RIG<span>offline · stolen verifier</span></div>
+          <div class="rig-badge" id="rigGpu">24 GiB GPU</div>
+        </div>
+        <div class="rig-body">
+          <div class="rig-stats">
+            <div><span>PER GUESS</span><b id="rigMem">64 MiB</b></div>
+            <div><span>CONCURRENT</span><b id="rigParallel">384</b></div>
+            <div><span>GUESSES/S</span><b id="rigRate">~1,000</b></div>
+            <div><span>TRIED</span><b id="rigCount">0</b></div>
+          </div>
+          <div class="gpu-wrap">
+            <div class="gpu-grid" id="gpuGrid" aria-hidden="true"></div>
+            <div class="gpu-note" id="gpuNote">384 slots × 64 MiB = 24 GiB</div>
+          </div>
+          <div class="rig-scale">
+            <div class="scale-title">TIME TO TRY <span>on this profile</span></div>
+            <div class="scale-row"><span>1 million guesses</span><b id="rig1m">16m 40s</b></div>
+            <div class="scale-row"><span>1 billion guesses</span><b id="rig1b">11.6 days</b></div>
+            <div class="scale-row"><span>1 trillion guesses</span><b id="rig1t">31.7 years</b></div>
+            <div class="scale-row strong"><span>5-word passphrase</span><b id="rigPass">~450 million years</b></div>
+            <div class="scale-note" id="rigNote">The GPU is always trying. A million guesses is minutes; a strong passphrase is far beyond reach.</div>
+          </div>
+                  <div class="cracker" id="crackerStrip">
+          <div class="crack-body">
+            <div class="crack-title">COST COMPARISON <span>illustrative</span></div>
+            <div class="crack-line" id="crackLine">64 MiB per guess · a 24 GiB GPU fits ≈ 384 guesses</div>
+            <div class="crack-bars">
+              <div class="cbar argon"><span>Argon2id</span><span class="track"><span class="fill" id="crackArgonFill"></span></span><em id="crackArgonRate">~10³/s</em></div>
+              <div class="cbar sha"><span>SHA-256</span><span class="track"><span class="fill"></span></span><em>~10⁹/s</em></div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <button class="rig-run" id="rigRun" type="button">Run the rig ▸</button>
+      </section>
+    </div>
+
+    <div class="server-col" id="serverCol">
+      <section class="card engine" id="engineCard" aria-label="Argon2id engine">
+        <div class="eng-head">
+          <svg class="eng-glyph" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="17" height="5" rx="1.4"/><rect x="3.5" y="9.5" width="17" height="5" rx="1.4"/><rect x="3.5" y="15.5" width="17" height="5" rx="1.4"/>
+            <circle cx="7" cy="6" r="1"/><circle cx="7" cy="12" r="1"/><circle cx="7" cy="18" r="1"/>
+            <path d="M14.5 6h3.5M14.5 12h3.5M14.5 18h3.5"/>
+          </svg>
+          <div class="eng-title">ARGON2ID ENGINE<span>inside shop.local</span></div>
+          <div class="seg eng-profile" id="profileSeg" title="Server-side setting · the browser never chooses the salt or KDF parameters" role="group" aria-label="Server-side Argon2id cost profile">
+            <button type="button" data-profile="light" title="19 MiB · t=2 · p=1 · OWASP minimum">19 MiB</button>
+            <button type="button" data-profile="balanced" title="64 MiB · t=3 · p=4 · RFC 9106 option 2">64 MiB</button>
+            <button type="button" data-profile="high" title="128 MiB · t=3 · p=4 · high">128 MiB</button>
+            <button type="button" data-profile="heavy" title="256 MiB · t=4 · p=4 · very high">256 MiB</button>
+          </div>
+        </div>
+        <div class="eng-body">
+          <div class="io-grid">
+            <div class="io">
+              <div class="io-k">PASSWORD<span class="io-tag">in memory</span></div>
+              <code class="io-v" id="enginePassword">correct horse battery staple</code>
+              <div class="io-n">never written to disk</div>
+            </div>
+            <div class="io">
+              <div class="io-k">SALT<span class="io-tag">16 bytes</span></div>
+              <code class="io-v" id="engineSalt">—</code>
+              <div class="io-n">random per user · stored with the hash</div>
+            </div>
+          </div>
+          <div class="mem" id="memBox">
+            <div class="mem-head"><span>MEMORY FILL <em>1 cell = 1 MiB</em></span><span id="passLabel">idle</span></div>
+            <div class="mem-wrap" id="memWrap" aria-hidden="true"></div>
+            <div class="mem-formula" id="memFormula" aria-live="off"></div>
+            <div class="mem-legend">
+              <span><i class="sw i"></i>data-independent</span>
+              <span><i class="sw d"></i>data-dependent</span>
+              <span><i class="sw r"></i>referenced block</span>
+              <span class="mem-total" id="memTotal">65,536 × 1 KiB</span>
+            </div>
+          </div>
+        </div>
+        <div class="out" id="engOut"></div>
+        <div class="eng-foot">
+          <span class="chip" id="chipM">m = 64 MiB</span>
+          <span class="chip" id="chipT">t = 3</span>
+          <span class="chip" id="chipP">p = 4</span>
+          <span class="chip" id="chipTime">~42 ms / verify</span>
+          <span class="chip">constant-time</span>
+        </div>
+      </section>
+    <section class="card server" id="serverCard" aria-label="Server">
+      <div class="chrome server-chrome">
+        <svg class="srv-glyph" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="17" height="5" rx="1.4"/><rect x="3.5" y="9.5" width="17" height="5" rx="1.4"/><rect x="3.5" y="15.5" width="17" height="5" rx="1.4"/>
+          <circle cx="7" cy="6" r="1"/><circle cx="7" cy="12" r="1"/><circle cx="7" cy="18" r="1"/>
+          <path d="M14.5 6h3.5M14.5 12h3.5M14.5 18h3.5"/>
+        </svg>
+        <span class="srv-name">shop.local</span>
+        <span class="srv-local">local</span>
+        <span class="srv-meta" id="srvMeta">172.28.0.10 · :443</span>
+      </div>
+      <div class="srv-body">
+        <div class="srv-section logs">
+          <div class="srv-label"><span>REQUEST LOG</span><span class="muted">stdout</span></div>
+          <div class="srv-log" id="serverLog"></div>
+        </div>
+        <div class="srv-section store">
+          <div class="srv-label"><span>USERS</span><span class="muted">server-side</span></div>
+          <div id="dbRows"></div>
+        </div>
+      </div>
+    </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span>Simulated lab · authorized training only · passwords are fake</span>
+    <span class="keys"><b>← →</b> steps · <b>space</b> play · <b>1–4</b> server profile · <b>F</b> full</span>
+    <span class="r">a hash is a verifier, not a password</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // Real values generated with argon2-cffi. Same salt/password across profiles;
+  // each profile's tags (good and wrong) are genuine Argon2id outputs.
+  const PASSWORD = 'correct horse battery staple';
+  const WRONG = 'correct horse battery stapl3';
+  const SALT_HEX = '6b8f2a91c4e7d0358a1f6c2e9b4d7a13';
+  const SALT_B64 = 'a48qkcTn0DWKH2wum016Ew';
+  const PROFILES = {
+    light: {
+      key: 'light', name: 'Light', memLabel: '19 MiB',
+      m: 19456, t: 2, p: 1, cols: 19, banks: 1, time: 24, rateNum: 5000, animMs: 3600,
+      capacity: 1293, rate: '~5×10³/s', barPct: 45,
+      tagHex: '7c581eabca12dfcc7e0834a8db753583c511744c154a8e2d0c3bac9c89e0b83d',
+      tagB64: 'fFgeq8oS38x+CDSo23U1g8URdEwVSo4tDDusnInguD0',
+      badHex: 'fe420750a7004614937ec32c171d0e4833733027941a9ec030159943b11a5524',
+      match: 0
+    },
+    balanced: {
+      key: 'balanced', name: 'Balanced', memLabel: '64 MiB',
+      m: 65536, t: 3, p: 4, cols: 16, banks: 1, time: 42, rateNum: 1000, animMs: 8000,
+      capacity: 384, rate: '~10³/s', barPct: 22,
+      tagHex: 'd67925eb41bca5562f8dff138997b2e170356a25dc07c313e150cea347ad3767',
+      tagB64: '1nkl60G8pVYvjf8TiZey4XA1aiXcB8MT4VDOo0etN2c',
+      badHex: '7f2ce3af7cf98ac771af68a2ef7fd90b2bd66f32f63db842a2a0d2bbf6351ea3',
+      match: 0
+    },
+    high: {
+      key: 'high', name: 'High', memLabel: '128 MiB',
+      m: 131072, t: 3, p: 4, cols: 32, banks: 1, time: 78, rateNum: 400, animMs: 11000,
+      capacity: 192, rate: '~4×10²/s', barPct: 15,
+      tagHex: '3b631ef8b7e0f6513b9b5336e6c5c2a1de5667c983d4822c7908375abfb12e40',
+      tagB64: 'O2Me+Lfg9lE7m1M25sXCod5WZ8mD1IIseQg3Wr+xLkA',
+      badHex: '97b49ca4d96f6e8e57613e0117dd150b150f966fdb3b0d3c3140aae8eccac7ec',
+      match: 0
+    },
+    heavy: {
+      key: 'heavy', name: 'Very high', memLabel: '256 MiB',
+      m: 262144, t: 4, p: 4, cols: 32, banks: 2, time: 213, rateNum: 200, animMs: 14000,
+      capacity: 96, rate: '~2×10²/s', barPct: 10,
+      tagHex: '2b9e0052c2e7bec8088a876814419809af9b6e1a76d027ee03473cbd812a12ef',
+      tagB64: 'K54AUsLnvsgIiodoFEGYCa+bbhp20CfuA0c8vYEqEu8',
+      badHex: 'c63802f743e00081832c61d898228fe84455e3bbdf46bc9095e5e9c6e6751854',
+      match: 0
+    }
+  };
+  const PROFILE_ORDER = ['light', 'balanced', 'high', 'heavy'];
+  function phcOf(p) {
+    return `$argon2id$v=19$m=${p.m},t=${p.t},p=${p.p}$${SALT_B64}$${p.tagB64}`;
+  }
+  function phcHTML(p) {
+    return `$argon2id$v=19$m=${p.m},t=${p.t},p=${p.p}$<span class="phc-salt">${SALT_B64}</span>$<span class="phc-tag">${p.tagB64}</span>`;
+  }
+
+  const STEPS = [
+    {
+      tag: 'register',
+      title: 'A password arrives',
+      text: 'Alice creates an account. Her password crosses the wire once, over TLS, and lives briefly in server memory. The browser sends only the password — the salt and Argon2id parameters are chosen by the server. The server now has to store a verifier, without storing the password itself.'
+    },
+    {
+      tag: 'salt',
+      title: 'A fresh random salt',
+      text: 'The server draws 16 bytes from a CSPRNG and keeps the salt with the account. A unique salt means the same password produces a different verifier for every user, and precomputed tables stop working. The salt is not secret.'
+    },
+    {
+      tag: 'derive',
+      title: 'Argon2id fills memory',
+      text: 'Argon2id fills {mem} of memory in {t} passes across {p} lanes. The server chooses these parameters; the browser has no say. The first half of pass 1 is data-independent, the rest data-dependent. The animation is slowed for visibility.'
+    },
+    {
+      tag: 'store',
+      title: 'Only the verifier is stored',
+      text: 'The 32-byte tag is encoded with the salt and parameters into a PHC string. The database keeps the verifier; the plaintext is discarded. A stolen database gives an attacker hashes, not passwords.'
+    },
+    {
+      tag: 'verify',
+      title: 'Login: derive and compare',
+      text: 'On the next login the server reads the salt and parameters from the stored PHC string, reruns Argon2id on the entered password, and compares the two 32-byte tags in constant time. It never decrypts anything — it recomputes and compares.'
+    },
+    {
+      tag: 'reject',
+      title: 'Wrong password, different tag',
+      text: 'One changed character produces a completely different tag. The constant-time comparison fails, the server returns 401, and no session is issued. The failed attempt still cost {mem} and {t} passes.'
+    },
+    {
+      tag: 'why',
+      title: 'Why Argon2id',
+      text: 'The attacker rig is offline with the stolen verifier, trying guesses at this profile’s rate. Each guess costs {mem}. A million guesses is minutes; a billion is days; a trillion is years. A strong 5-word passphrase is far beyond that. Salt, rate limiting, and entropy still matter — but a stolen verifier is expensive to attack.'
+    }
+  ];
+
+  // ---------- dom ----------
+  const $ = (id) => document.getElementById(id);
+  const stage = $('stage');
+  const browserCard = $('browserCard');
+  const serverCard = $('serverCard');
+  const serverCol = $('serverCol');
+  const engineCard = $('engineCard');
+  const attackerCard = $('attackerCard');
+  const gpuGrid = $('gpuGrid');
+  const wires = $('wires');
+  const browserPage = $('browserPage');
+  const enginePassword = $('enginePassword');
+  const engineSalt = $('engineSalt');
+  const memBox = $('memBox');
+  const memWrap = $('memWrap');
+  const passLabel = $('passLabel');
+  const engOut = $('engOut');
+  const crackerStrip = $('crackerStrip');
+  const serverLog = $('serverLog');
+  const dbRows = $('dbRows');
+  const srvMeta = $('srvMeta');
+  const narrator = $('narrator');
+  const dots = $('dots');
+  const btnBack = $('btnBack');
+  const btnNext = $('btnNext');
+  const btnPlay = $('btnPlay');
+  const playLabel = $('playLabel');
+  const playIco = $('playIco');
+  const btnFull = $('btnFull');
+
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const lockIcon = (s = 11) => `<svg viewBox="0 0 16 16" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3.2" y="7" width="9.6" height="6.3" rx="1.6"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>`;
+  const checkIcon = `<svg viewBox="0 0 20 20" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5 8 14.5 16 5.5"/></svg>`;
+  const crossIcon = `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l10 10M15 5 5 15"/></svg>`;
+  const shieldIcon = `<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M10 2.2 16.5 4.7v5.1c0 3.4-2.6 6.2-6.5 8-3.9-1.8-6.5-4.6-6.5-8V4.7L10 2.2Z"/><path d="m7 10 2 2 4-4"/></svg>`;
+
+  // ---------- state ----------
+  const state = {
+    step: 0,
+    profile: 'balanced',
+    playing: false,
+    animating: false,
+    rigRunning: false,
+    rigAttempts: 0,
+    rigTicks: 0,
+    gen: 0,
+    vis: { salt: false, tag: false, stored: false, verified: false, failed: false, compared: false }
+  };
+  const P = () => PROFILES[state.profile];
+
+  let geo = { B: 0, S: 0, y: 78, stageW: 0, stageH: 0 };
+  let activeAnims = new Set();
+  let activeTimers = new Set();
+  let playTimer = null;
+
+  const animationsEnabled = () => window.innerWidth > 1260;
+  const dur = (ms) => REDUCED ? 1 : ms;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, dur(ms)));
+
+  function later(fn, ms) {
+    const id = setTimeout(() => { activeTimers.delete(id); fn(); }, ms);
+    activeTimers.add(id);
+    return id;
+  }
+
+  function cancelAnims() {
+    for (const a of activeAnims) { try { a.cancel(); } catch (_) {} }
+    activeAnims.clear();
+    for (const t of activeTimers) clearTimeout(t);
+    activeTimers.clear();
+    stage.querySelectorAll('.packet').forEach((el) => el.remove());
+    memWrap.querySelectorAll('.now, .ref').forEach((c) => c.classList.remove('now', 'ref'));
+  }
+
+  function flashEl(el) {
+    if (!el) return;
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+  }
+
+  function targetVis(step) {
+    return {
+      salt: step >= 1,
+      tag: step >= 2,
+      stored: step >= 3,
+      verified: step === 4,
+      failed: step === 5,
+      compared: step === 4 || step === 5
+    };
+  }
+
+  // ---------- browser ----------
+  function shopHeader(active) {
+    const on = (k) => active === k ? ' class="on"' : '';
+    return `<header class="shop-head">
+      <div class="shop-logo"><span class="shop-mark">F&amp;F</span>Fern &amp; Field</div>
+      <nav class="shop-nav"><span>Shop</span><span>New in</span><span${on('account')}>Account</span></nav>
+      <div class="shop-actions"><span>Search</span><span class="bag">Bag (2)</span></div>
+    </header>`;
+  }
+
+  function shopFoot() {
+    return `<div class="shop-foot"><span>Fern &amp; Field · account security</span><span>passwords hashed with Argon2id</span></div>`;
+  }
+
+  function authWrap(inner) {
+    return `<div class="shop">${shopHeader('account')}<div class="auth-page">${inner}</div>${shopFoot()}</div>`;
+  }
+
+  function statusCard(icon, title, sub, button) {
+    return `<div class="auth-card status-card">
+      ${icon}
+      <h3>${title}</h3>
+      <p class="auth-sub">${sub}</p>
+      ${button || ''}
+    </div>`;
+  }
+
+  function renderBrowser() {
+    const s = state.step;
+    const p = P();
+    const lanes = `${p.p} lane${p.p === 1 ? '' : 's'}`;
+    const passes = `${p.t} pass${p.t === 1 ? '' : 'es'}`;
+    let inner = '';
+
+    if (s === 0) {
+      inner = `<div class="auth-card">
+        <span class="eyebrow">Account security</span>
+        <h3>Create your account</h3>
+        <p class="auth-sub">Set a password. The server will store a verifier, not the password itself.</p>
+        <label class="field-label">Email</label>
+        <div class="field">alice@example.test</div>
+        <label class="field-label">Password <span class="vis-tag">visible for teaching</span></label>
+        <div class="field pw">${PASSWORD}</div>
+        <button class="auth-btn" data-goto="1">Create account →</button>
+        <p class="auth-tiny">Demo password · sent over TLS · never stored</p>
+      </div>`;
+    } else if (s === 1) {
+      inner = statusCard(
+        `<div class="spinner"></div>`,
+        'Preparing your account…',
+        'Generating 16 random bytes of salt. The salt is stored with the verifier, not kept secret.',
+        `<button class="auth-btn ghost" data-goto="2">Continue →</button>`
+      );
+    } else if (s === 2) {
+      inner = statusCard(
+        `<div class="spinner"></div>`,
+        'Hashing with Argon2id…',
+        `${p.memLabel} of memory · ${passes} · ${lanes}. This is intentionally slow.`,
+        `<button class="auth-btn ghost" data-goto="3">Store verifier →</button>`
+      );
+    } else if (s === 3) {
+      inner = statusCard(
+        `<div class="auth-icon ok">${checkIcon}</div>`,
+        'Account created',
+        'The server stored a salted Argon2id verifier. Your password was discarded.',
+        `<button class="auth-btn" data-goto="4">Sign in →</button>`
+      );
+    } else if (s === 4) {
+      inner = state.vis.compared
+        ? statusCard(
+            `<div class="auth-icon ok">${checkIcon}</div>`,
+            'Welcome back, Alice',
+            'The 32-byte tags matched in constant time. A session was issued.',
+            `<div class="auth-chip">✓ signed in</div><button class="auth-btn ghost" data-goto="5">Try a wrong password →</button>`
+          )
+        : statusCard(
+            `<div class="spinner"></div>`,
+            'Verifying your password…',
+            'Rerunning Argon2id with the salt and parameters from the stored record.',
+            ''
+          );
+    } else if (s === 5) {
+      inner = state.vis.compared
+        ? statusCard(
+            `<div class="auth-icon bad">${crossIcon}</div>`,
+            'Incorrect password',
+            'The computed tag did not match. No session was created.',
+            `<div class="auth-attempt">attempted: <b>${WRONG}</b></div><button class="auth-btn ghost" data-goto="6">Why is this hard to crack? →</button>`
+          )
+        : statusCard(
+            `<div class="spinner"></div>`,
+            'Checking the password…',
+            'This time the entered password is one character off.',
+            ''
+          );
+    } else {
+      inner = statusCard(
+        `<div class="auth-icon ok">${shieldIcon}</div>`,
+        'Argon2id makes every guess expensive.',
+        `The database never saw the password. Each guessed password still costs ${p.memLabel} of memory and ${passes}.`,
+        `<div class="auth-stats"><span>${p.memLabel} / guess</span><span>${passes}</span><span>16 B salt</span><span>32 B tag</span></div><button class="auth-btn ghost" data-goto="0">Start over ↺</button>`
+      );
+    }
+
+    browserPage.innerHTML = authWrap(inner);
+  }
+
+  // ---------- server ----------
+  function logEntry(key, t, method, path, status, sub, cls) {
+    return `<div class="log-entry" data-key="${key}">
+      <div class="log-line">
+        <span class="lt">${t}</span>
+        <span class="lm ${cls}">${method}</span>
+        <span class="lp">${path}</span>
+        ${status ? `<span class="ls">${status}</span>` : ''}
+      </div>
+      ${sub ? `<div class="log-sub">${sub}</div>` : ''}
+    </div>`;
+  }
+
+  function renderServer() {
+    const s = state.step;
+    let h = '';
+    if (s < 1) {
+      h = `<div class="srv-empty">waiting for credentials…</div>`;
+    } else {
+      h += logEntry('register', '12:04:01', 'POST', '/register', '200', 'email=alice@example.test · password received over TLS', 'post');
+      h += logEntry('salt', '12:04:01', 'CSPRNG', '16 bytes', '', `salt = ${SALT_HEX}`, 'crypto');
+      if (s >= 2) {
+        const p = P();
+        h += logEntry('derive', '12:04:02', 'ARGON2ID', `m=${p.m},t=${p.t},p=${p.p}`, '',
+          `${p.memLabel} · ${p.t} passes · ${p.p} lane${p.p === 1 ? '' : 's'} · ~${p.time} ms`, 'crypto');
+      }
+      if (s >= 3) {
+        h += logEntry('insert', '12:04:02', 'SQL', 'INSERT users', '201', 'verifier stored · plaintext discarded', 'set');
+      }
+      if (s >= 4 && (s > 4 || state.vis.compared)) {
+        h += logEntry('login', '12:04:03', 'POST', '/login', '200', 'constant-time compare OK · session issued', 'post');
+      }
+      if (s >= 5 && (s > 5 || state.vis.compared)) {
+        h += logEntry('fail', '12:04:04', 'POST', '/login', '401', 'compare failed · no session · rate-limit 5/min', 'post');
+      }
+      if (s >= 6) {
+        h += logEntry('policy', '12:04:04', 'POLICY', 'rate limit', '', '5 attempts / minute · params current · rehash on upgrade', 'crypto');
+      }
+    }
+    serverLog.innerHTML = h;
+    serverLog.scrollTop = serverLog.scrollHeight;
+  }
+
+  function renderDB() {
+    if (state.step < 3) {
+      dbRows.innerHTML = `<div class="db-empty">No verifier stored.</div>`;
+      return;
+    }
+    const p = P();
+    dbRows.innerHTML = `<div class="db-row" data-key="user">
+      <div class="db-user"><span>alice@example.test</span><span class="db-badge">argon2id</span></div>
+      <div class="db-phc">${phcHTML(p)}</div>
+      <div class="db-meta">salt 16 B · tag 32 B · m=${p.memLabel} · t=${p.t} · p=${p.p}</div>
+      <div class="db-plain">password: — never stored</div>
+    </div>`;
+  }
+
+  // ---------- engine ----------
+  function buildGrid(p) {
+    memWrap.innerHTML = '';
+    memWrap.dataset.cols = String(p.cols);
+    memWrap.dataset.banks = String(p.banks);
+    memWrap.dataset.lanes = String(p.p);
+    memWrap.style.setProperty('--rows', String(p.banks * p.p));
+    memWrap.style.setProperty('--bgap', `${(p.banks - 1) * 8}px`);
+    for (let bank = 0; bank < p.banks; bank++) {
+      const row = document.createElement('div');
+      row.className = 'mem-bank';
+      // lane labels: p lanes, each a row of blocks (a second bank continues the same lanes)
+      const lanes = document.createElement('div');
+      lanes.className = 'lanes';
+      for (let lane = 0; lane < p.p; lane++) {
+        const l = document.createElement('span');
+        l.textContent = `L${lane}`;
+        lanes.appendChild(l);
+      }
+      row.appendChild(lanes);
+      const grid = document.createElement('div');
+      grid.className = 'mem-grid';
+      grid.style.gridTemplateColumns = `repeat(${p.cols}, var(--cell))`;
+      for (let lane = 0; lane < p.p; lane++) {
+        for (let col = 0; col < p.cols; col++) {
+          const d = document.createElement('div');
+          d.className = 'cell';
+          d.dataset.lane = String(lane);
+          d.dataset.col = String(col);
+          d.dataset.bank = String(bank);
+          grid.appendChild(d);
+        }
+      }
+      row.appendChild(grid);
+      memWrap.appendChild(row);
+    }
+  }
+
+  function clearGrid() {
+    memWrap.querySelectorAll('.cell').forEach((c) => { c.className = 'cell'; });
+  }
+
+  function fillGrid() {
+    const last = 'p' + Math.min(P().t, 4);
+    memWrap.querySelectorAll('.cell').forEach((c) => { c.className = 'cell on d ' + last; });
+  }
+
+  function colCells(col) {
+    return memWrap.querySelectorAll(`.cell[data-col="${col}"]`);
+  }
+
+  // One byte per cell, 32 per row: the stored tag and the recomputed tag side by side.
+  function bytesHTML(hex, cls, otherHex, state) {
+    const cells = [];
+    for (let i = 0; i < 32; i++) {
+      const b = hex.slice(i * 2, i * 2 + 2);
+      let k = '';
+      if (otherHex) {
+        if (state === 'pending') k = ' pend';
+        else k = otherHex.slice(i * 2, i * 2 + 2) === b ? ' eq' : ' ne';
+      }
+      cells.push(`<span class="byte${k}" data-i="${i}">${b}</span>`);
+    }
+    return `<div class="bytes ${cls}">${cells.join('')}</div>`;
+  }
+
+  function compareHTML(p, ok) {
+    const stored = p.tagHex;
+    const computed = ok ? p.tagHex : p.badHex;
+    const done = state.vis.compared;
+    const st = done ? 'done' : 'pending';
+    const verdict = !done
+      ? `<div class="match wait" id="cmpVerdict">comparing all 32 bytes · constant time · no early exit</div>`
+      : ok
+        ? `<div class="match ok" id="cmpVerdict">✓ 32 / 32 bytes equal · constant-time compare · session issued</div>`
+        : `<div class="match bad" id="cmpVerdict">✗ ${p.match} / 32 bytes equal · all 32 still checked · 401 · no session</div>`;
+    return `<div class="out-k">TAG COMPARISON <span class="${done ? (ok ? '' : 'bad') : ''}">${done ? (ok ? 'match' : 'mismatch') : 'comparing…'}</span></div>
+      <div class="cmp-k"><span>stored (from PHC)</span><i>32 bytes</i></div>
+      ${bytesHTML(stored, 'stored')}
+      <div class="cmp-k"><span>computed (${ok ? 'entered password' : 'wrong password'})</span><i id="cmpCount">${done ? '32 / 32 checked' : '0 / 32 checked'}</i></div>
+      ${bytesHTML(computed, 'computed', stored, st)}
+      ${verdict}`;
+  }
+
+  function outputForStep() {
+    const s = state.step;
+    const p = P();
+    if (s < 2) return `<div class="out-empty">Tag not computed yet.</div>`;
+    if (s === 2) {
+      if (!state.vis.tag) return `<div class="out-empty"><span class="spinner sm"></span> Deriving a 32-byte tag…</div>`;
+      return `<div class="out-k">32-BYTE TAG <span>computed</span></div>
+        <code class="taghex">${p.tagHex}</code>
+        <div class="out-n">Then encoded with the salt and parameters into a PHC string.</div>`;
+    }
+    if (s === 3) {
+      return `<div class="out-k">PHC VERIFIER <span>stored</span></div>
+        <code class="taghex phc">${phcHTML(p)}</code>
+        <div class="out-n">Self-describing: algorithm, version, params, salt, tag.</div>`;
+    }
+    if (s === 4) {
+      if (!state.vis.verified) return `<div class="out-empty"><span class="spinner sm"></span> Rerunning Argon2id with the stored salt…</div>`;
+      return compareHTML(p, true);
+    }
+    if (s === 5) {
+      if (!state.vis.failed) return `<div class="out-empty"><span class="spinner sm"></span> Rerunning Argon2id with the wrong password…</div>`;
+      return compareHTML(p, false);
+    }
+    return `<div class="out-k">WHAT THE DATABASE HOLDS <span>salted verifier</span></div>
+      <code class="taghex phc">${phcHTML(p)}</code>
+      <div class="out-n">${p.memLabel} per guess. The password is not in here.</div>`;
+  }
+
+  function renderEngine() {
+    const p = P();
+    enginePassword.textContent = state.step === 5 ? WRONG : PASSWORD;
+    enginePassword.classList.toggle('bad', state.step === 5);
+    engineSalt.textContent = state.step >= 1 ? SALT_HEX : '—';
+    engineSalt.classList.toggle('muted', state.step < 1);
+
+    $('chipM').textContent = `m = ${p.memLabel}`;
+    $('chipT').textContent = `t = ${p.t}`;
+    $('chipP').textContent = `p = ${p.p}`;
+    $('chipTime').textContent = `~${p.time} ms / verify`;
+    $('memTotal').textContent = `${p.m.toLocaleString()} × 1 KiB · ${p.p} lane${p.p === 1 ? '' : 's'} × ${p.m / 1024 / p.p} MiB`;
+    $('crackLine').textContent = `${p.memLabel} per guess · a 24 GiB GPU fits ≈ ${p.capacity} guesses`;
+    $('crackArgonRate').textContent = p.rate;
+    $('crackArgonFill').style.width = `${p.barPct}%`;
+    crackerStrip.classList.toggle('hot', state.step === 6);
+    updateProfileButtons();
+
+    if (memWrap.dataset.cols !== String(p.cols) || memWrap.dataset.banks !== String(p.banks) || memWrap.dataset.lanes !== String(p.p)) buildGrid(p);
+    if (state.step >= 2 && state.vis.tag) fillGrid();
+    else if (state.step < 2 || (state.step === 2 && !state.vis.tag)) clearGrid();
+
+    if (state.step < 2) passLabel.textContent = 'idle';
+    else if (state.step === 2) passLabel.textContent = state.vis.tag ? `${p.t} / ${p.t} · ~${p.time} ms real` : 'filling…';
+    else if (state.step === 4) passLabel.textContent = state.vis.compared ? `match · ~${p.time} ms` : 'recomputing…';
+    else if (state.step === 5) passLabel.textContent = state.vis.compared ? `mismatch · ~${p.time} ms` : 'recomputing…';
+    else passLabel.textContent = `${p.t} / ${p.t} · ~${p.time} ms real`;
+
+    setFormula(state.step < 2 ? 'idle' : (state.step === 2 && !state.vis.tag) ? 'idle' : 'done');
+
+    memBox.classList.toggle('ok', state.step === 4 && state.vis.compared);
+    memBox.classList.toggle('bad', state.step === 5 && state.vis.compared);
+    engOut.innerHTML = outputForStep();
+  }
+
+  // The block recipe under the grid: each new block mixes the previous block with an earlier one.
+  function setFormula(mode, info = {}) {
+    const f = $('memFormula');
+    if (mode === 'idle') {
+      f.innerHTML = `<span>B[lane][j] = <b>G</b>( B[lane][j−1], B[lane][<span class="r">ref</span>] )</span><span class="ph">every block needs an earlier block → memory-hard</span>`;
+    } else if (mode === 'fill') {
+      const { col, ref, indep, pass } = info;
+      if (pass === 1 && col < 2) {
+        f.innerHTML = `<span>B[L0][<b>${col}</b>] = <b>H′</b>( H0 ‖ ${col} ‖ lane )</span><span class="ph">seed blocks · H0 = H(password, salt, m, t, p)</span>`;
+        return;
+      }
+      f.innerHTML = `<span>B[L0][<b>${col}</b>] = <b>G</b>( B[L0][${col - 1}], B[L0][<span class="r">${ref}</span>] )</span><span class="ph">pass ${pass} · ref ${indep ? 'from a PRNG · data-independent' : 'from the previous block · data-dependent'}</span>`;
+    } else if (mode === 'verify') {
+      f.innerHTML = `<span>same salt · same m, t, p · same <b>G</b> chain</span><span class="ph">recomputing the tag from the entered password</span>`;
+    } else {
+      f.innerHTML = `<span>tag = <b>H′</b>( B[0][last] ⊕ … ⊕ B[${Math.max(0, P().p - 1)}][last] )</span><span class="ph">last column of every lane folded into 32 bytes</span>`;
+    }
+  }
+
+  function updateProfileButtons() {
+    const seg = $('profileSeg');
+    if (!seg) return;
+    seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.profile === state.profile));
+  }
+
+  function renderAll() {
+    renderBrowser();
+    renderEngine();
+    renderServer();
+    renderDB();
+    renderRig();
+  }
+
+  // ---------- attacker GPU rig ----------
+  let rigTimer = null;
+  let gpuSlots = [];
+
+  function buildGpuGrid() {
+    gpuGrid.innerHTML = '';
+    gpuSlots = [];
+    for (let i = 0; i < 384; i++) {
+      const s = document.createElement('span');
+      s.className = 'gpu-slot';
+      gpuGrid.appendChild(s);
+      gpuSlots.push(s);
+    }
+  }
+
+  function fmtDuration(sec) {
+    if (!isFinite(sec) || sec <= 0) return '—';
+    if (sec < 60) return `${Math.round(sec)}s`;
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s`;
+    if (sec < 86400) {
+      const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+      return `${h}h ${m}m`;
+    }
+    if (sec < 31557600) return `${(sec / 86400).toFixed(1)} days`;
+    const y = sec / 31557600;
+    if (y < 1000) return `${y.toFixed(1)} years`;
+    if (y < 1e6) return `${Math.round(y).toLocaleString()} years`;
+    if (y < 1e9) return `~${Math.round(y / 1e6).toLocaleString()} million years`;
+    return `~${(y / 1e9).toFixed(1)} billion years`;
+  }
+
+  function renderRig() {
+    const p = P();
+    const shown = Math.min(384, p.capacity);
+    $('rigGpu').textContent = '24 GiB GPU';
+    $('rigMem').textContent = p.memLabel;
+    $('rigParallel').textContent = p.capacity.toLocaleString();
+    $('rigRate').textContent = p.rate;
+    gpuSlots.forEach((s, i) => s.classList.toggle('off', i >= shown));
+    $('gpuNote').textContent = `${shown}${p.capacity > 384 ? ' of ' + p.capacity.toLocaleString() : ''} slots · ${p.memLabel} per guess`;
+    $('rig1m').textContent = fmtDuration(1e6 / p.rateNum);
+    $('rig1b').textContent = fmtDuration(1e9 / p.rateNum);
+    $('rig1t').textContent = fmtDuration(1e12 / p.rateNum);
+    $('rigPass').textContent = fmtDuration(1.42e19 / p.rateNum);
+    if (!state.rigRunning && state.rigAttempts === 0) {
+      $('rigNote').textContent = `A million guesses is ${fmtDuration(1e6 / p.rateNum)}. A 5-word passphrase (~2.8×10¹⁹) is ${fmtDuration(1.42e19 / p.rateNum)}.`;
+    }
+  }
+
+  function stopRig(reset = false) {
+    if (rigTimer) clearInterval(rigTimer);
+    rigTimer = null;
+    state.rigRunning = false;
+    gpuSlots.forEach((s) => s.classList.remove('hot'));
+    const btn = $('rigRun');
+    if (btn) btn.textContent = state.rigAttempts >= 1e6 ? 'Run again ▸' : 'Run the rig ▸';
+    if (reset) {
+      state.rigAttempts = 0;
+      state.rigTicks = 0;
+      $('rigCount').textContent = '0';
+    }
+  }
+
+  function startRig() {
+    if (state.rigRunning) return;
+    if (rigTimer) clearInterval(rigTimer);
+    state.rigRunning = true;
+    state.rigTicks = 0;
+    state.rigAttempts = 0;
+    $('rigCount').textContent = '0';
+    $('rigRun').textContent = 'Pause rig ❚❚';
+    const p = P();
+    const total = 1e6;
+    const active = Math.min(384, p.capacity);
+    $('rigNote').textContent = `Trying (fast-forward). 1M guesses = ${fmtDuration(1e6 / p.rateNum)} of real GPU time.`;
+    rigTimer = setInterval(() => {
+      if (!state.rigRunning) return;
+      state.rigTicks++;
+      state.rigAttempts = Math.min(total, state.rigAttempts + Math.ceil(total / 60));
+      $('rigCount').textContent = state.rigAttempts.toLocaleString();
+      const wave = (state.rigTicks * 7) % Math.max(1, active);
+      gpuSlots.forEach((s, i) => {
+        if (i < active) {
+          const d = (i - wave + active) % active;
+          s.classList.toggle('hot', d < 48);
+        } else {
+          s.classList.remove('hot');
+        }
+      });
+      if (state.rigAttempts >= total) {
+        clearInterval(rigTimer);
+        rigTimer = null;
+        state.rigRunning = false;
+        $('rigRun').textContent = 'Run again ▸';
+        gpuSlots.forEach((s) => s.classList.remove('hot'));
+        $('rigNote').textContent = `1,000,000 guesses = ${fmtDuration(1e6 / p.rateNum)} of GPU time. A 5-word passphrase = ${fmtDuration(1.42e19 / p.rateNum)}.`;
+      }
+    }, 100);
+  }
+
+  function fillProfileText(text) {
+    const p = P();
+    return text.replaceAll('{mem}', p.memLabel).replaceAll('{t}', String(p.t)).replaceAll('{p}', String(p.p));
+  }
+
+  function updateNarrator() {
+    const s = STEPS[state.step];
+    $('stepCount').textContent = `Step ${state.step + 1} of ${STEPS.length}`;
+    $('stepTag').textContent = s.tag;
+    $('stepTitle').textContent = s.title;
+    $('stepText').textContent = fillProfileText(s.text);
+    narrator.classList.remove('swap');
+    void narrator.offsetWidth;
+    narrator.classList.add('swap');
+  }
+
+  function updateDots() {
+    [...dots.children].forEach((b, i) => {
+      b.classList.toggle('on', i === state.step);
+      b.classList.toggle('past', i < state.step);
+    });
+  }
+
+  function updateControls() {
+    btnBack.disabled = state.step === 0;
+    btnNext.disabled = state.step === STEPS.length - 1;
+    playLabel.textContent = state.playing ? 'Pause' : 'Play';
+    playIco.textContent = state.playing ? '❚❚' : '▶';
+  }
+
+  // ---------- geometry / wire ----------
+  function measureGeo() {
+    if (!animationsEnabled()) return;
+    const sr = stage.getBoundingClientRect();
+    const br = browserCard.getBoundingClientRect();
+    const sv = serverCol.getBoundingClientRect();
+    if (!sr.width) return;
+    geo = {
+      stageW: sr.width,
+      stageH: sr.height,
+      B: br.right - sr.left,
+      S: sv.left - sr.left,
+      y: 78
+    };
+    drawWires();
+  }
+
+  function drawWires() {
+    const { B, S, y, stageW, stageH } = geo;
+    if (!stageW || !stageH) return;
+    wires.setAttribute('viewBox', `0 0 ${stageW} ${stageH}`);
+    wires.innerHTML = `
+      <defs>
+        <linearGradient id="wg" x1="${B}" y1="0" x2="${S}" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#6ea8ff" stop-opacity=".95"/>
+          <stop offset="1" stop-color="#48e3ac" stop-opacity=".95"/>
+        </linearGradient>
+      </defs>
+      <line x1="${B}" y1="${y}" x2="${S}" y2="${y}" stroke="url(#wg)" stroke-width="10" opacity=".07"/>
+      <line x1="${B}" y1="${y}" x2="${S}" y2="${y}" stroke="url(#wg)" stroke-width="2.2"/>
+      <line x1="${B}" y1="${y}" x2="${S}" y2="${y}" stroke="#d5e4f5" stroke-width="1.2" stroke-dasharray="2 12" opacity=".38" class="wire-flow"/>
+      <circle cx="${B + 8}" cy="${y}" r="3.8" fill="#080d14" stroke="#5d86b4" stroke-width="1.4"/>
+      <circle cx="${S - 8}" cy="${y}" r="3.8" fill="#080d14" stroke="#4b9a7c" stroke-width="1.4"/>
+    `;
+  }
+
+  // ---------- packets ----------
+  function makePacket(html) {
+    const el = document.createElement('div');
+    el.className = 'packet tls';
+    el.innerHTML = html;
+    stage.appendChild(el);
+    return el;
+  }
+
+  function pktPos(anchor, el) {
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const y = geo.y - h / 2;
+    if (anchor === 'browser') return { x: geo.B - 18, y };
+    return { x: geo.S - w + 18, y };
+  }
+
+  function move(el, from, to, ms) {
+    el.style.transform = `translate(${from.x}px,${from.y}px)`;
+    const a = el.animate(
+      [
+        { transform: `translate(${from.x}px,${from.y}px)` },
+        { transform: `translate(${to.x}px,${to.y}px)` }
+      ],
+      { duration: dur(ms), easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }
+    );
+    activeAnims.add(a);
+    return a.finished.catch(() => {}).then(() => { activeAnims.delete(a); });
+  }
+
+  function packetHTML(kind) {
+    if (kind === 'register') {
+      return `<div class="pkt-row"><span class="pkt-tag">POST</span> /register</div>
+        <div class="pkt-row sub"><span class="lock">${lockIcon(11)}</span> TLS 1.3 · password</div>`;
+    }
+    if (kind === 'wrong') {
+      return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
+        <div class="pkt-row sub"><span class="pkt-tag bad">WRONG</span> alice@example.test</div>`;
+    }
+    return `<div class="pkt-row"><span class="pkt-tag">POST</span> /login</div>
+      <div class="pkt-row sub">alice@example.test · <span class="lock">${lockIcon(11)}</span> TLS</div>`;
+  }
+
+  async function flyPacket(kind, gen) {
+    const el = makePacket(packetHTML(kind));
+    await move(el, pktPos('browser', el), pktPos('server', el), 1050);
+    el.remove();
+    return gen === state.gen;
+  }
+
+  // ---------- animations ----------
+  async function runDerive(gen) {
+    const p = P();
+    clearGrid();
+    passLabel.textContent = `allocating ${p.memLabel}…`;
+    await sleep(500);
+    if (gen !== state.gen) return;
+
+    const passes = p.t;
+    const cols = p.cols;
+    const total = p.animMs;
+    const alloc = REDUCED ? 0 : 500;
+    const pause = REDUCED ? 0 : 240;
+    const perCol = Math.max(1, (total - alloc - (passes - 1) * pause) / (passes * cols));
+    const start = performance.now();
+
+    // Deterministic "random" reference columns so a replayed derivation looks the same.
+    let seed = 0x9e3779b1;
+    const rnd = (n) => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return n > 0 ? seed % n : 0; };
+
+    for (let pass = 1; pass <= passes; pass++) {
+      for (let col = 0; col < cols; col++) {
+        if (gen !== state.gen) return;
+        const indep = pass === 1 && col < Math.floor(cols / 2);
+        // In pass 1 a block can only reference blocks already written; later passes may reach anywhere.
+        let ref = null;
+        if (pass === 1 && col > 1) ref = rnd(col - 1);
+        else if (pass > 1) { ref = rnd(cols - 1); if (ref >= col) ref += 1; }
+        memWrap.querySelectorAll('.ref').forEach((c) => c.classList.remove('ref'));
+        if (ref !== null) colCells(ref).forEach((c) => c.classList.add('ref'));
+        colCells(col).forEach((cell) => {
+          cell.className = 'cell on ' + (indep ? 'i' : 'd') + ' p' + Math.min(pass, 4) + ' now';
+        });
+        setFormula('fill', { col, ref, indep, pass });
+        await sleep(perCol);
+        if (gen !== state.gen) return;
+        memWrap.querySelectorAll('.now').forEach((c) => c.classList.remove('now'));
+        passLabel.textContent = `pass ${pass} / ${passes} · ${((performance.now() - start) / 1000).toFixed(1)}s`;
+      }
+      await sleep(pause);
+    }
+    if (gen !== state.gen) return;
+    memWrap.querySelectorAll('.ref').forEach((c) => c.classList.remove('ref'));
+    state.vis.tag = true;
+    renderEngine();
+    flashEl(engOut);
+    flashEl(serverLog.querySelector('[data-key="derive"]'));
+  }
+
+  // A fast re-run of the fill: the server recomputes the whole thing on every login.
+  async function sweepGrid(gen, totalMs) {
+    const p = P();
+    const perCol = Math.max(14, totalMs / (p.t * p.cols));
+    for (let pass = 1; pass <= p.t; pass++) {
+      passLabel.textContent = `recomputing · pass ${pass} / ${p.t}`;
+      for (let col = 0; col < p.cols; col++) {
+        if (gen !== state.gen) return false;
+        colCells(col).forEach((c) => c.classList.add('now'));
+        await sleep(perCol);
+        if (gen !== state.gen) return false;
+        colCells(col).forEach((c) => c.classList.remove('now'));
+      }
+    }
+    return gen === state.gen;
+  }
+
+  // Constant-time compare: every byte is checked at the same pace, match or not.
+  async function sweepBytes(gen) {
+    const cells = engOut.querySelectorAll('.bytes.computed .byte');
+    const stored = engOut.querySelectorAll('.bytes.stored .byte');
+    const count = $('cmpCount');
+    const per = 46;
+    for (let i = 0; i < cells.length; i++) {
+      if (gen !== state.gen) return false;
+      const c = cells[i];
+      const same = c.textContent === stored[i].textContent;
+      c.classList.remove('pend');
+      c.classList.add('chk', same ? 'eq' : 'ne');
+      stored[i].classList.add('chk');
+      if (count) count.textContent = `${i + 1} / 32 checked`;
+      await sleep(per);
+      c.classList.remove('chk');
+      stored[i].classList.remove('chk');
+    }
+    return gen === state.gen;
+  }
+
+  async function runVerify(gen, ok) {
+    state.vis.verified = false;
+    state.vis.failed = false;
+    state.vis.compared = false;
+    renderBrowser();
+    renderEngine();
+    renderServer();
+
+    const arrived = await flyPacket(ok ? 'login' : 'wrong', gen);
+    if (!arrived || gen !== state.gen) return;
+
+    setFormula('verify');
+    const swept = await sweepGrid(gen, 1500);
+    if (!swept) return;
+
+    // Result known inside the engine; now the comparison runs byte by byte.
+    state.vis.verified = ok;
+    state.vis.failed = !ok;
+    renderEngine();
+    passLabel.textContent = 'comparing tags…';
+    await sleep(120);
+    if (gen !== state.gen) return;
+    const compared = await sweepBytes(gen);
+    if (!compared) return;
+
+    state.vis.compared = true;
+    renderAll();
+    flashEl(engOut.querySelector('#cmpVerdict'));
+    flashEl(dbRows.querySelector('.db-row'));
+    flashEl(serverLog.querySelector(`[data-key="${ok ? 'login' : 'fail'}"]`));
+  }
+
+  async function runStepAnimation(i) {
+    const gen = state.gen;
+    measureGeo();
+    if (!animationsEnabled()) {
+      state.vis = targetVis(i);
+      renderAll();
+      return;
+    }
+    state.animating = true;
+    try {
+      if (i === 1) {
+        const arrived = await flyPacket('register', gen);
+        if (arrived) {
+          flashEl(serverLog.querySelector('[data-key="register"]'));
+          flashEl(engineSalt);
+          flashEl(serverLog.querySelector('[data-key="salt"]'));
+        }
+      } else if (i === 2) {
+        await runDerive(gen);
+      } else if (i === 3) {
+        flashEl(dbRows.querySelector('.db-row'));
+        flashEl(serverLog.querySelector('[data-key="insert"]'));
+      } else if (i === 4) {
+        await runVerify(gen, true);
+      } else if (i === 5) {
+        await runVerify(gen, false);
+      } else if (i === 6) {
+        flashEl(engOut);
+      }
+    } finally {
+      if (gen === state.gen) state.animating = false;
+    }
+  }
+
+  // ---------- navigation ----------
+  function setStep(i, { animate = false } = {}) {
+    const next = Math.max(0, Math.min(STEPS.length - 1, i));
+    state.step = next;
+    state.gen++;
+    state.animating = false;
+    cancelAnims();
+
+    state.vis = targetVis(next);
+    if (animate) {
+      if (next === 2) state.vis.tag = false;
+      if (next === 4) { state.vis.verified = false; state.vis.compared = false; }
+      if (next === 5) { state.vis.failed = false; state.vis.compared = false; }
+    }
+
+    updateNarrator();
+    updateDots();
+    updateControls();
+    renderAll();
+    measureGeo();
+
+    stopRig(true);
+    if (next === STEPS.length - 1) {
+      later(() => { if (state.step === STEPS.length - 1 && !state.rigRunning) startRig(); }, 600);
+    }
+
+    if (animate) runStepAnimation(next);
+  }
+
+  function stopPlay() {
+    state.playing = false;
+    if (playTimer) clearTimeout(playTimer);
+    playTimer = null;
+    updateControls();
+  }
+
+  function schedulePlay() {
+    if (playTimer) clearTimeout(playTimer);
+    const delay = state.animating ? 600 : 4500;
+    playTimer = setTimeout(() => {
+      if (!state.playing) return;
+      if (state.animating) { schedulePlay(); return; }
+      if (state.step >= STEPS.length - 1) { stopPlay(); return; }
+      setStep(state.step + 1, { animate: true });
+      schedulePlay();
+    }, delay);
+  }
+
+  function togglePlay() {
+    if (state.playing) { stopPlay(); return; }
+    if (state.step >= STEPS.length - 1) setStep(0, { animate: false });
+    state.playing = true;
+    updateControls();
+    schedulePlay();
+  }
+
+  function resetAll() {
+    stopPlay();
+    stopRig(true);
+    setStep(0, { animate: false });
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch (_) {}
+  }
+
+  // ---------- wiring ----------
+  STEPS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.title = `${i + 1}. ${s.title}`;
+    b.setAttribute('aria-label', `Go to step ${i + 1}: ${s.title}`);
+    b.addEventListener('click', () => {
+      stopPlay();
+      setStep(i, { animate: i > state.step });
+    });
+    dots.appendChild(b);
+  });
+
+  btnBack.addEventListener('click', () => {
+    stopPlay();
+    setStep(state.step - 1, { animate: false });
+  });
+  btnNext.addEventListener('click', () => {
+    stopPlay();
+    setStep(state.step + 1, { animate: true });
+  });
+  btnPlay.addEventListener('click', togglePlay);
+  $('btnReset').addEventListener('click', resetAll);
+  btnFull.addEventListener('click', toggleFullscreen);
+
+  function setProfile(key) {
+    if (!PROFILES[key] || key === state.profile) return;
+    stopPlay();
+    state.profile = key;
+    state.gen++;
+    cancelAnims();
+    stopRig(true);
+    updateProfileButtons();
+    // At the derivation step, replay the work at the new cost. Elsewhere,
+    // recompute the verifier in place so the rest of the story stays coherent.
+    if (state.step === 2) setStep(2, { animate: true });
+    else setStep(state.step, { animate: false });
+  }
+
+  $('profileSeg').querySelectorAll('button').forEach((b) => {
+    b.addEventListener('click', () => setProfile(b.dataset.profile));
+  });
+
+  $('rigRun').addEventListener('click', () => {
+    if (state.rigRunning) stopRig(false);
+    else startRig();
+  });
+
+  browserPage.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-goto]');
+    if (!btn) return;
+    stopPlay();
+    setStep(Number(btn.dataset.goto), { animate: true });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (document.body.classList.contains('expanding')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'PageDown':
+        e.preventDefault(); stopPlay();
+        setStep(state.step + 1, { animate: true });
+        break;
+      case 'ArrowLeft':
+      case 'PageUp':
+        e.preventDefault(); stopPlay();
+        setStep(state.step - 1, { animate: false });
+        break;
+      case ' ':
+        e.preventDefault(); togglePlay();
+        break;
+      case 'r': case 'R':
+        e.preventDefault(); resetAll();
+        break;
+      case '1':
+        e.preventDefault(); setProfile('light');
+        break;
+      case '2':
+        e.preventDefault(); setProfile('balanced');
+        break;
+      case '3':
+        e.preventDefault(); setProfile('high');
+        break;
+      case '4':
+        e.preventDefault(); setProfile('heavy');
+        break;
+      case 'f': case 'F':
+        e.preventDefault(); toggleFullscreen();
+        break;
+      default: break;
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    btnFull.textContent = document.fullscreenElement ? 'Exit' : 'Present';
+  });
+
+  // ---------- enlarge panels ----------
+  const EXPAND_ICON = `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2H2v4M10 14h4v-4M2 2l5 5M14 14 9 9"/></svg>`;
+  const COLLAPSE_ICON = `<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6H2V2M10 10h4v4M2 6l4-4M14 10l-4 4"/></svg>`;
+  let expandedPanel = null;
+
+  function collapsePanel() {
+    if (!expandedPanel) return;
+    const { card, btn, backdrop } = expandedPanel;
+    card.classList.remove('expanded');
+    btn.innerHTML = EXPAND_ICON;
+    btn.title = 'Enlarge panel';
+    btn.setAttribute('aria-label', 'Enlarge panel');
+    btn.setAttribute('aria-expanded', 'false');
+    backdrop.remove();
+    document.body.classList.remove('expanding');
+    expandedPanel = null;
+    requestAnimationFrame(measureGeo);
+  }
+
+  function setupExpand(card, header, theme) {
+    if (!header) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'expand-btn ' + (theme || 'dark');
+    btn.title = 'Enlarge panel';
+    btn.setAttribute('aria-label', 'Enlarge panel');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = EXPAND_ICON;
+    header.appendChild(btn);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (expandedPanel && expandedPanel.card === card) { collapsePanel(); return; }
+      collapsePanel();
+      stopPlay();
+      const backdrop = document.createElement('div');
+      backdrop.className = 'expand-backdrop';
+      backdrop.innerHTML = '<span class="expand-hint">Click outside or press Esc to restore</span>';
+      backdrop.addEventListener('click', collapsePanel);
+      document.querySelector('.app').appendChild(backdrop);
+      card.classList.add('expanded');
+      document.body.classList.add('expanding');
+      btn.innerHTML = COLLAPSE_ICON;
+      btn.title = 'Restore panel';
+      btn.setAttribute('aria-label', 'Restore panel');
+      btn.setAttribute('aria-expanded', 'true');
+      expandedPanel = { card, btn, backdrop };
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') collapsePanel();
+  });
+
+  // ---------- boot ----------
+  buildGrid(P());
+  buildGpuGrid();
+  renderRig();
+  setupExpand(browserCard, browserCard.querySelector('.toolbar-right'), 'light');
+  setupExpand(attackerCard, attackerCard.querySelector('.rig-head'));
+  setupExpand(engineCard, engineCard.querySelector('.eng-head'));
+  setupExpand(serverCard, serverCard.querySelector('.server-chrome'));
+  $('urlLock').innerHTML = lockIcon(12);
+
+  const params = new URLSearchParams(location.search);
+  if (PROFILES[params.get('profile')]) state.profile = params.get('profile');
+  const startParam = parseInt(params.get('step') || '0', 10);
+  const startStep = Number.isFinite(startParam) ? Math.max(0, Math.min(STEPS.length - 1, startParam - 1)) : 0;
+
+  const ro = new ResizeObserver(() => requestAnimationFrame(measureGeo));
+  ro.observe(stage);
+  ro.observe(browserCard);
+  ro.observe(serverCard);
+  ro.observe(serverCol);
+  window.addEventListener('resize', () => requestAnimationFrame(measureGeo));
+
+  setStep(startStep, { animate: false });
+  requestAnimationFrame(measureGeo);
+})();
+</script>
+</body>
+</html>
