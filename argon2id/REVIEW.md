@@ -1,3 +1,5 @@
+> Historical review of the previous single-file implementation. See the current [review guide](../README.md) for the rebuilt labs.
+
 # Review: Password Check · Argon2id (visual lab)
 
 Reviewed 2 November 2026 against the file as published (local `index.html` was byte-identical to

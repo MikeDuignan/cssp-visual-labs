@@ -1,0 +1,39 @@
+{
+  "browser": "153.0.8010.47",
+  "date": "2026-11-03T20:55:05.937Z",
+  "checks": 156,
+  "results": [
+    {
+      "suite": "cookie challenges, export, cancellation, keyboard, responsive and accessibility",
+      "result": "PASS",
+      "widths": [
+        1920,
+        1440,
+        1280,
+        960,
+        800,
+        390,
+        320
+      ],
+      "axeViolations": 0
+    },
+    {
+      "suite": "argon challenges, export, cancellation, keyboard, responsive and accessibility",
+      "result": "PASS",
+      "widths": [
+        1920,
+        1440,
+        1280,
+        960,
+        800,
+        390,
+        320
+      ],
+      "axeViolations": 0
+    },
+    {
+      "suite": "Missing optional animation/resize APIs",
+      "result": "PASS"
+    }
+  ]
+}

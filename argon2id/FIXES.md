@@ -1,3 +1,5 @@
+> Historical review of the previous single-file implementation. See the current [review guide](../README.md) for the rebuilt labs.
+
 # Fixes: Password Check · Argon2id
 
 What was broken, how it was reproduced, the root cause, what changed, and how it was verified.

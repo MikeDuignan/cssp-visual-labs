@@ -3,18 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CSSP Visual Labs</title>
+<title>Authentication under the surface — CSSP Visual Labs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%23102b35'/%3E%3Ctext x='9' y='30' font-size='32' fill='%23d5f975'%3Ea%3C/text%3E%3C/svg%3E">
 <style>
-  :root { --bg:#f6f7f9; --card:#ffffff; --text:#1c2330; --muted:#56627a; --line:#dfe3ea; --accent:#1f5fbf; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#10151d; --card:#171e29; --text:#e8edf5; --muted:#9aa7bd; --line:#2a3445; --accent:#7db2ff; }
-  }
+  :root { --bg:#f5f3eb; --card:#fffefa; --text:#172a31; --muted:#53666b; --line:#d6ddd4; --accent:#286658; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
   main { max-width:880px; margin:0 auto; padding:40px 20px 56px; }
-  h1 { margin:0 0 6px; font-size:1.9rem; letter-spacing:-.01em; }
+  h1 { margin:0 0 18px; font-size:clamp(2rem, 5vw, 3.2rem); line-height:1.1; letter-spacing:-.035em; }
+  .eyebrow { color:var(--muted); font: .75rem/1.5 monospace; letter-spacing:.1em; margin:0 0 18px; }
   .sub { margin:0 0 28px; color:var(--muted); }
-  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); }
   a.card { display:block; text-decoration:none; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px 20px 18px; }
   a.card:hover, a.card:focus-visible { border-color:var(--accent); outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
   a.card h2 { margin:0 0 6px; font-size:1.2rem; color:var(--accent); }
@@ -25,31 +24,33 @@
 </head>
 <body>
 <main>
-  <h1>CSSP Visual Labs</h1>
-  <p class="sub">Two interactive pages for COMP09031 Cybersecurity and Secure Programming (ATU Galway). They run in your browser; there is nothing to download or install.</p>
+  <p class="eyebrow">CSSP VISUAL LABS / ATU GALWAY</p>
+  <h1>Authentication<br><em>under the surface.</em></h1>
+  <p class="sub">A password proves identity at login. A session carries that identity into later requests. Follow both mechanisms, inspect the evidence, and test your predictions.</p>
   <div class="grid">
-    <a class="card" href="cookie-theft/">
+    <a class="card" href="cookie-theft/index.html">
       <h2>Cookie Theft</h2>
-      <p>Session hijacking, shown step by step.</p>
+      <p>Follow one session ID from creation to capture, replay and revocation.</p>
       <ul>
         <li>A browser logs in and the server issues a session cookie</li>
-        <li>Every request carries the cookie</li>
-        <li>An attacker on the wire copies it and replays it</li>
-        <li>HTTPS as the defence</li>
+        <li>Eligible requests carry the cookie back for lookup</li>
+        <li>An observer in the traffic path can copy an exposed ID</li>
+        <li>Test TLS, cookie policy, deletion and server invalidation</li>
       </ul>
     </a>
-    <a class="card" href="argon2id/">
+    <a class="card" href="argon2id/index.html">
       <h2>Password Check: Argon2id</h2>
-      <p>How a server stores and checks a password.</p>
+      <p>Discover how a server checks a password using a stored verifier.</p>
       <ul>
         <li>A fresh random salt, then a memory-hard hash</li>
         <li>Only the verifier is stored</li>
         <li>Login: derive again and compare</li>
-        <li>Why an offline attacker is slowed down</li>
+        <li>Explore salts, memory, passes, lanes and offline guesses</li>
       </ul>
     </a>
   </div>
-  <p class="note">Both pages work best on a screen at least 1280 by 720 pixels. All sites, accounts and data in them are fictional. They are for teaching only.</p>
+  <p class="note">Each exhibit offers seven guided chapters, an exploration bench and five prediction activities. Pause, inspect, replay or switch to Focus view for projection. Keyboard, touch, narrow layouts and reduced motion are supported.</p>
+  <p class="note">COMP09031 Cybersecurity and Secure Programming. All sites, accounts and data are fictional. No accounts, analytics or simulation data sent to a server. Download the repository to use the labs offline.</p>
 </main>
 </body>
 </html>
