@@ -1,5 +1,3 @@
-> Historical review of the previous single-file implementation. See the current [review guide](../README.md) for the rebuilt labs.
-
 # Review of "Cookie Theft · Visual Lab" (2 November 2026)
 
 Scope: `index.html` as published at https://mikeduignan.github.io/cssp-visual-labs/cookie-theft/

@@ -1,5 +1,3 @@
-> Historical review of the previous single-file implementation. See the current [review guide](../README.md) for the rebuilt labs.
-
 # Cookie Theft · Visual Lab — fixes (2 November 2026)
 
 Repairs to `index.html` for the hang Mike reported on 2 November 2026 (the Sign-in spinner "spins
